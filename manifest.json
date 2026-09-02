@@ -1,7 +1,7 @@
 {
   "name": "誦서율창 모바일",
   "short_name": "율창",
-  "start_url": "/",
+  "start_url": "/study-pwa/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#0b3c5d",
