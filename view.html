@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>정밀 자막 동기화 재생</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; background: #121212; color: #fff; display: flex; flex-direction: column; height: 100vh; }
+        .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        audio { width: 100%; }
+        .back-btn { color: #90caf9; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block; margin-bottom: 8px; }
+        .lyrics-container { margin-top: 130px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
+        .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
+        .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
+    </style>
+</head>
+<body>
+    <div class="top-player">
+        <a class="back-btn" href="index.html">⬅ 목록으로 돌아가기</a>
+        <audio id="audioPlayer" controls></audio>
+    </div>
+    <div class="lyrics-container" id="lyricsContainer">로딩 중...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const docId = urlParams.get('id');
+
+        async function loadDocDetail() {
+            let { data: doc, error } = await _supabase.from('documents').select('*').eq('id', docId).single();
+            if (error || !doc) {
+                document.getElementById('lyricsContainer').textContent = '데이터를 불러오지 못했습니다.';
+                return;
+            }
+
+            // 오디오 설정
+            const audio = document.getElementById('audioPlayer');
+            if (doc.audio_url) {
+                audio.src = doc.audio_url;
+            }
+
+            // 텍스트 문장 파싱
+            const container = document.getElementById('lyricsContainer');
+            container.innerHTML = '';
+            
+            const sentences = doc.content.split('\n').filter(s => s.trim().length > 0);
+            sentences.forEach((sent, idx) => {
+                const div = document.createElement('div');
+                div.className = 'lyric-line';
+                div.id = 'line-' + idx;
+                div.textContent = sent;
+                container.appendChild(div);
+            });
+
+            const lines = document.querySelectorAll('.lyric-line');
+            const syncData = doc.sync_data || []; // Supabase에 저장된 타임스탬프 배열
+
+            audio.addEventListener('timeupdate', () => {
+                if (!audio.duration || lines.length === 0) return;
+                const currentTime = audio.currentTime;
+                
+                let activeIndex = 0;
+                for (let i = 0; i < syncData.length; i++) {
+                    if (currentTime >= syncData[i].start && currentTime <= syncData[i].end) {
+                        activeIndex = i;
+                        break;
+                    } else if (currentTime > syncData[syncData.length - 1]?.end) {
+                        activeIndex = syncData.length - 1;
+                    }
+                }
+
+                lines.forEach((line, idx) => {
+                    if (idx === activeIndex) {
+                        if (!line.classList.contains('active')) {
+                            line.classList.add('active');
+                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    } else {
+                        line.classList.remove('active');
+                    }
+                });
+            });
+        }
+        loadDocDetail();
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title>誦서율창 모바일</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; }
+        h2 { color: #0b3c5d; text-align: center; }
+        .doc-box { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-view { display: block; text-align: center; background: #2e7d32; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h2>📜 誦서율창 클라우드</h2>
+    <div id="docList">불러오는 중...</div>
+
+    <!-- Supabase JS SDK 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchDocuments() {
+            const listDiv = document.getElementById('docList');
+            let { data: docs, error } = await _supabase.from('documents').select('*');
+            
+            if (error || !docs || docs.length === 0) {
+                listDiv.innerHTML = '<p style="text-align:center; color:#777;">저장된 문서가 없습니다.</p>';
+                return;
+            }
+
+            let html = '';
+            docs.forEach(doc => {
+                html += `
+                    <div class="doc-box">
+                        <div style="font-size:12px; color:#1e6f3d; font-weight:bold;">📚 ${doc.category}</div>
+                        <div style="font-size:16px; font-weight:bold; margin:5px 0;">📄 ${doc.title}</div>
+                        <a class="btn-view" href="view.html?id=${doc.id}">📖 정밀 자막과 함께 듣기</a>
+                    </div>
+                `;
+            });
+            listDiv.innerHTML = html;
+        }
+        fetchDocuments();
+    </script>
+</body>
+</html>
