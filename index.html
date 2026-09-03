@@ -103,6 +103,10 @@
         .back-btn { color: #90caf9; text-decoration: none; font-weight: bold; cursor: pointer; }
         .playlist-status { color: #ffeb3b; font-weight: bold; }
         
+        /* 💡 반복재생 체크박스 스타일 */
+        .repeat-label { color: #fff; font-size: 13px; display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
+        .repeat-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #2e7d32; }
+
         .lyrics-container { margin-top: 150px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
         .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
         .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
@@ -135,6 +139,10 @@
             <div class="player-info-row">
                 <a class="back-btn" onclick="closeViewer()">⬅ 목록으로 돌아가기</a>
                 <span id="playlistStatus" class="playlist-status">재생 중: 1 / 1</span>
+                <!-- 💡 반복재생 체크박스 추가 -->
+                <label class="repeat-label">
+                    <input type="checkbox" id="repeatCheckbox"> 🔁 반복재생
+                </label>
             </div>
             <audio id="audioPlayer" controls></audio>
         </div>
@@ -148,7 +156,6 @@
         let supabaseClient;
         let allDocuments = [];
         
-        // 연속 재생 상태 관리 변수
         let currentPlaylist = [];
         let currentPlaylistIndex = 0;
 
@@ -244,7 +251,6 @@
                     const content = treeData[cat];
                     html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
                     
-                    // 과목 바로 아래 파일들 처리
                     if (content._files.length > 0) {
                         content._files.sort((a, b) => naturalSort(a.title, b.title));
                         const folderId = `cat_${cat.replace(/[^a-zA-Z0-9]/g, '_')}`;
@@ -316,7 +322,6 @@
             checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
         }
 
-        // 체크된 문서들 연속 재생 시작
         function playSelectedFolder(folderId) {
             const checkboxes = document.querySelectorAll(`input.doc-checkbox.${folderId}:checked`);
             if (checkboxes.length === 0) {
@@ -341,7 +346,6 @@
             startPlaylistPlayback();
         }
 
-        // 단건 재생 (개별 문서에서 '정밀 자막과 함께 듣기' 누를 때)
         function openViewerByTitle(title) {
             const doc = allDocuments.find(d => d.title === title);
             if (!doc || !doc.audio_url) {
@@ -441,13 +445,18 @@
                 });
             };
 
-            // 💡 현재 곡이 끝나면 자동으로 다음 곡으로 넘어가도록 처리
+            // 💡 곡이 끝났을 때 반복재생 체크 여부에 따라 다음 곡 또는 처음으로 이동
             audio.onended = () => {
+                const isRepeat = document.getElementById('repeatCheckbox').checked;
                 if (currentPlaylistIndex + 1 < currentPlaylist.length) {
                     loadAndPlayIndex(currentPlaylistIndex + 1);
                 } else {
-                    alert("모든 곡의 재생이 완료되었습니다.");
-                    closeViewer();
+                    if (isRepeat) {
+                        loadAndPlayIndex(0); // 플레이리스트 처음부터 다시 반복
+                    } else {
+                        alert("모든 곡의 재생이 완료되었습니다.");
+                        closeViewer();
+                    }
                 }
             };
 
