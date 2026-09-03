@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>誦書律唱 클라우드</title>
+    <title>誦서율창 클라우드</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; }
@@ -34,8 +34,8 @@
 </head>
 <body>
     <div id="main-view">
-        <h2>📜 誦書律唱 모바일 클라우드</h2>
-        <div class="subtitle">과목 ➔ 분류 ➔ 문서 아코디언 트리 시스템</div>
+        <h2>📜 誦서율창 클라우드</h2>
+        <div class="subtitle">과목 ➔ 분류 ➔ 문서 아코디언 트리 시스템 (순서 정렬 적용)</div>
         <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
     </div>
 
@@ -54,6 +54,11 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allDocuments = [];
+
+        // 💡 숫자를 올바르게 비교하는 자연스러운 정렬 함수 (예: 2번이 10번보다 앞으로 오도록)
+        function naturalSort(a, b) {
+            return a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' });
+        }
 
         async function loadData() {
             const appDiv = document.getElementById('app');
@@ -90,15 +95,28 @@
                 });
 
                 let html = '';
-                for (const [cat, content] of Object.entries(treeData).sort()) {
+                
+                // 💡 과목(Category) 순서대로 정렬
+                const sortedCategories = Object.keys(treeData).sort(naturalSort);
+
+                for (const cat of sortedCategories) {
+                    const content = treeData[cat];
                     html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
                     
+                    // 과목 바로 아래 문서들 정렬
+                    content._files.sort((a, b) => naturalSort(a.title, b.title));
                     content._files.forEach(doc => {
                         html += renderDocBox(doc);
                     });
 
-                    for (const [subcat, docs] of Object.entries(content._subcats).sort()) {
+                    // 💡 하위 분류(Subcategory) 순서대로 정렬
+                    const sortedSubcats = Object.keys(content._subcats).sort(naturalSort);
+                    for (const subcat of sortedSubcats) {
                         html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary><div style="padding: 5px;">`;
+                        
+                        // 분류 아래 문서들 정렬
+                        const docs = content._subcats[subcat];
+                        docs.sort((a, b) => naturalSort(a.title, b.title));
                         docs.forEach(doc => {
                             html += renderDocBox(doc);
                         });
