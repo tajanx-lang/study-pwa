@@ -4,13 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>誦書律唱(송서율창) 클라우드</title>
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- CryptoJS MD5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; }
+        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; -webkit-text-size-adjust: 100%; }
         h2 { color: #0b3c5d; text-align: center; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
         details { background: white; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
-        summary { padding: 14px 16px; font-weight: bold; cursor: pointer; outline: none; display: flex; align-items: center; user-select: none; }
+        summary { padding: 14px 16px; font-weight: bold; cursor: pointer; outline: none; display: flex; align-items: center; user-select: none; -webkit-user-select: none; }
         .cat-summary { font-size: 17px; color: #0b3c5d; background: #eef3f8; border-bottom: 1px solid #d0e1fd; }
         .subcat-summary { font-size: 15px; color: #1e6f3d; background: #f4f8f4; margin: 6px 10px; border-radius: 8px; border: 1px solid #c8e6c9; }
         
@@ -22,13 +25,13 @@
         .no-audio { font-size: 12px; color: #d32f2f; background: #ffebee; padding: 8px; border-radius: 6px; text-align: center; }
         .loading { text-align: center; color: #777; margin-top: 40px; font-size: 15px; }
 
-        /* 💡 하단 외부 링크 버튼 스타일 */
+        /* 하단 외부 링크 버튼 스타일 */
         .link-buttons-container {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-top: 35px;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
         }
         .external-btn {
@@ -55,6 +58,34 @@
         .btn-cafe { background-color: #b71c1c; }
         .btn-cafe:hover { background-color: #c62828; }
 
+        /* 사용자 인증 코드 박스 스타일 */
+        .auth-code-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin: 0 auto 35px auto;
+            max-width: 420px;
+            gap: 12px;
+            border: 1px solid #d0e1fd;
+        }
+        .auth-btn-label {
+            background-color: #455a64;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: default;
+        }
+        .auth-code { font-size: 16px; font-weight: bold; color: #d32f2f; background: #ffebee; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; }
+        .copy-btn { background: #0b3c5d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: background 0.2s; }
+        .copy-btn:hover { background: #124e78; }
+
         /* 전체 화면 뷰어 스타일 */
         #viewer-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #121212; color: #fff; flex-direction: column; z-index: 1000; }
         .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -71,11 +102,18 @@
         <div class="subtitle">과목 ➔ 분류 ➔ 문서 아코디언 트리 시스템 (순서 정렬 적용)</div>
         <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
 
-        <!-- 💡 요청하신 세 가지 외부 링크 버튼 영역 -->
+        <!-- 외부 링크 버튼 영역 -->
         <div class="link-buttons-container">
             <a href="https://cskim120.pythonanywhere.com/" target="_blank" class="external-btn btn-saju">🔮 자미두수 명반&心易(심역)</a>
             <a href="https://tajanx.pythonanywhere.com/" target="_blank" class="external-btn btn-yeok">📜 선천 역서(先天 易數)</a>
             <a href="https://cafe.daum.net/kangchang" target="_blank" class="external-btn btn-cafe">☕ 강철의 心易 자미두수-사이트</a>
+        </div>
+
+        <!-- 사용자 인증 코드 버튼 및 출력 영역 -->
+        <div class="auth-code-container">
+            <div class="auth-btn-label">사용자 인증 코드</div>
+            <span id="authCodeText" class="auth-code">로딩중...</span>
+            <button class="copy-btn" onclick="copyAuthCode()">📋 복사하기</button>
         </div>
     </div>
 
@@ -91,9 +129,55 @@
     <script>
         const SUPABASE_URL = "https://vdiogfisdouzvtnpuvoc.supabase.co";
         const SUPABASE_KEY = "sb_publishable_fgXbc2B32uYh8lWgqtFSjA_IaP2-4AG";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        
+        let supabaseClient;
         let allDocuments = [];
+
+        // 이달의 인증 코드 자동 생성 함수
+        function initMonthlyAuthCode() {
+            try {
+                const secretSalt = "My_Super_Secret_Key_2026_StudyRoom!";
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const combined = `${secret_salt}_${year}-${month}`;
+                const hash = CryptoJS.MD5(combined).toString();
+                const code = hash.substring(0, 8).toUpperCase();
+                document.getElementById('authCodeText').textContent = code;
+            } catch (e) {
+                document.getElementById('authCodeText').textContent = "ERROR";
+            }
+        }
+
+        // 인증 코드 클립보드 복사 함수 (아이폰 사파리 호환 개선)
+        function copyAuthCode() {
+            const codeText = document.getElementById('authCodeText').textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(codeText).then(() => {
+                    alert('인증 코드가 복사되었습니다: ' + codeText);
+                }).catch(() => {
+                    fallbackCopy(codeText);
+                });
+            } else {
+                fallbackCopy(codeText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('인증 코드가 복사되었습니다: ' + text);
+            } catch (err) {
+                alert('복사 실패. 코드를 직접 복사해 주세요.');
+            }
+            document.body.removeChild(textarea);
+        }
 
         function naturalSort(a, b) {
             return a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' });
@@ -102,6 +186,11 @@
         async function loadData() {
             const appDiv = document.getElementById('app');
             try {
+                if (!window.supabase) {
+                    throw new Error("Supabase 스크립트가 로드되지 않았습니다.");
+                }
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
                 const { data, error } = await supabaseClient
                     .from('documents')
                     .select('id, category, sub_category, title, audio_url, content, sync_data');
@@ -170,8 +259,8 @@
             let audioName = `${doc.title}.mp3`;
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${audioName}</div>
-                <a class="btn-view" onclick="openViewer('${doc.title}')">📖 정밀 자막과 함께 듣기</a>
-                <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${audioName}')">📥 다운로드 (${audioName})</a>
+                <a class="btn-view" onclick="openViewer('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
+                <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
@@ -182,6 +271,10 @@
                     </div>
                 </details>
             `;
+        }
+
+        function escapeTitle(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
 
         async function downloadAudioFile(url, filename) {
@@ -297,7 +390,10 @@
             document.getElementById('main-view').style.display = 'block';
         }
 
-        loadData();
+        document.addEventListener("DOMContentLoaded", () => {
+            initMonthlyAuthCode();
+            loadData();
+        });
     </script>
 </body>
 </html>
