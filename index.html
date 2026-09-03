@@ -1,52 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.json">
-    <title>誦서율창 모바일</title>
+    <title>誦서율창 클라우드</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; }
-        h2 { color: #0b3c5d; text-align: center; }
-        .doc-box { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .btn-view { display: block; text-align: center; background: #2e7d32; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 8px; }
+        h2 { color: #0b3c5d; text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+        details { background: white; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
+        summary { padding: 14px 16px; font-weight: bold; cursor: pointer; outline: none; display: flex; align-items: center; user-select: none; }
+        .cat-summary { font-size: 17px; color: #0b3c5d; background: #eef3f8; border-bottom: 1px solid #d0e1fd; }
+        .subcat-summary { font-size: 15px; color: #1e6f3d; background: #f4f8f4; margin: 6px 10px; border-radius: 8px; border: 1px solid #c8e6c9; }
+        .doc-summary { font-size: 14px; color: #333; background: #fafafa; margin: 6px 15px; border-radius: 8px; border: 1px solid #e0e0e0; }
+        .doc-content { padding: 12px; background: #fff; border-top: 1px solid #eee; }
+        .audio-player { width: 100%; margin-top: 8px; }
+        .loading { text-align: center; color: #777; margin-top: 40px; font-size: 15px; }
     </style>
 </head>
 <body>
     <h2>📜 誦서율창 클라우드</h2>
-    <div id="docList">불러오는 중...</div>
+    <div class="subtitle">과목 ➔ 분류 ➔ 문서 트리 구조 시스템</div>
+    <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
 
-    <!-- Supabase JS SDK 로드 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://vdiogfisdouzvtnpuvoc.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_fgXbc2B32uYh8lWgqtFSjA_IaP2-4AG';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_URL = "https://vdiogfisdouzvtnpuvoc.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_fgXbc2B32uYh8lWgqtFSjA_IaP2-4AG";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function fetchDocuments() {
-            const listDiv = document.getElementById('docList');
-            let { data: docs, error } = await _supabase.from('documents').select('*');
-            
-            if (error || !docs || docs.length === 0) {
-                listDiv.innerHTML = '<p style="text-align:center; color:#777;">저장된 문서가 없습니다.</p>';
-                return;
+        async function loadData() {
+            const appDiv = document.getElementById('app');
+            try {
+                const { data, error } = await supabaseClient
+                    .from('documents')
+                    .select('category, sub_category, title, audio_url, content');
+
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    appDiv.innerHTML = '<div style="text-align:center; color:#777; margin-top:40px;">저장된 문서가 없습니다.</div>';
+                    return;
+                }
+
+                const treeData = {};
+                data.forEach(row => {
+                    const cat = row.category || "기타";
+                    const sub = row.sub_category ? row.sub_category.trim() : "";
+                    
+                    if (!treeData[cat]) {
+                        treeData[cat] = { _files: [], _subcats: {} };
+                    }
+
+                    if (sub === "") {
+                        treeData[cat]._files.push(row);
+                    } else {
+                        if (!treeData[cat]._subcats[sub]) {
+                            treeData[cat]._subcats[sub] = [];
+                        }
+                        treeData[cat]._subcats[sub].push(row);
+                    }
+                });
+
+                let html = '';
+                for (const [cat, content] of Object.entries(treeData).sort()) {
+                    html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
+                    
+                    content._files.forEach(doc => {
+                        html += renderDoc(doc);
+                    });
+
+                    for (const [subcat, docs] of Object.entries(content._subcats).sort()) {
+                        html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary><div style="padding: 5px;">`;
+                        docs.forEach(doc => {
+                            html += renderDoc(doc);
+                        });
+                        html += `</div></details>`;
+                    }
+
+                    html += `</div></details>`;
+                }
+
+                appDiv.innerHTML = html;
+            } catch (err) {
+                appDiv.innerHTML = `<div style="text-align:center; color:#d32f2f; margin-top:40px;">데이터 로드 오류: ${err.message}</div>`;
             }
-
-            let html = '';
-            docs.forEach(doc => {
-                html += `
-                    <div class="doc-box">
-                        <div style="font-size:12px; color:#1e6f3d; font-weight:bold;">📚 ${doc.category}</div>
-                        <div style="font-size:16px; font-weight:bold; margin:5px 0;">📄 ${doc.title}</div>
-                        <a class="btn-view" href="view.html?id=${doc.id}">📖 정밀 자막과 함께 듣기</a>
-                    </div>
-                `;
-            });
-            listDiv.innerHTML = html;
         }
-        fetchDocuments();
+
+        function renderDoc(doc) {
+            let audioHtml = doc.audio_url 
+                ? `<audio class="audio-player" controls src="${doc.audio_url}"></audio>`
+                : `<div style="font-size: 12px; color: #d32f2f; background: #ffebee; padding: 6px; border-radius: 4px; text-align: center;">⚠️ 오디오 파일이 없습니다.</div>`;
+
+            return `
+                <details class="doc-summary">
+                    <summary>📄 ${doc.title}</summary>
+                    <div class="doc-content">
+                        <div style="font-size: 13px; color: #555; white-space: pre-wrap; margin-bottom: 10px; max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px;">${doc.content || '내용이 없습니다.'}</div>
+                        ${audioHtml}
+                    </div>
+                </details>
+            `;
+        }
+
+        loadData();
     </script>
 </body>
 </html>
