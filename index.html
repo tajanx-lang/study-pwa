@@ -13,28 +13,52 @@
         summary { padding: 14px 16px; font-weight: bold; cursor: pointer; outline: none; display: flex; align-items: center; user-select: none; }
         .cat-summary { font-size: 17px; color: #0b3c5d; background: #eef3f8; border-bottom: 1px solid #d0e1fd; }
         .subcat-summary { font-size: 15px; color: #1e6f3d; background: #f4f8f4; margin: 6px 10px; border-radius: 8px; border: 1px solid #c8e6c9; }
-        .doc-summary { font-size: 14px; color: #333; background: #fafafa; margin: 6px 15px; border-radius: 8px; border: 1px solid #e0e0e0; }
-        .doc-content { padding: 12px; background: #fff; border-top: 1px solid #eee; }
-        .audio-player { width: 100%; margin-top: 8px; }
+        
+        /* 문서 링크 스타일 */
+        .doc-link { display: block; background: #fafafa; margin: 6px 15px; padding: 12px 16px; border-radius: 8px; border: 1px solid #e0e0e0; color: #333; text-decoration: none; font-size: 14px; font-weight: bold; transition: background 0.2s; }
+        .doc-link:hover { background: #e3f2fd; color: #0d47a1; }
+        
         .loading { text-align: center; color: #777; margin-top: 40px; font-size: 15px; }
+
+        /* 전체 화면 뷰어 스타일 */
+        #viewer-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #121212; color: #fff; flex-direction: column; z-index: 1000; }
+        .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .top-player audio { width: 100%; }
+        .back-btn { display: inline-block; margin-bottom: 8px; color: #90caf9; text-decoration: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .lyrics-container { margin-top: 130px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
+        .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
+        .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
     </style>
 </head>
 <body>
-    <h2>📜 誦서율창 클라우드</h2>
-    <div class="subtitle">과목 ➔ 분류 ➔ 문서 트리 구조 시스템</div>
-    <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
+    <div id="main-view">
+        <h2>📜 誦서율창 클라우드</h2>
+        <div class="subtitle">과목 ➔ 분류 ➔ 문서 트리 구조 시스템</div>
+        <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
+    </div>
+
+    <!-- 전체 화면 자막 동기화 뷰어 -->
+    <div id="viewer-container">
+        <div class="top-player">
+            <a class="back-btn" onclick="closeViewer()">⬅ 목록으로 돌아가기</a>
+            <audio id="audioPlayer" controls></audio>
+        </div>
+        <div class="lyrics-container" id="lyricsContainer"></div>
+    </div>
 
     <script>
         const SUPABASE_URL = "https://vdiogfisdouzvtnpuvoc.supabase.co";
         const SUPABASE_KEY = "sb_publishable_fgXbc2B32uYh8lWgqtFSjA_IaP2-4AG";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let allDocuments = [];
+
         async function loadData() {
             const appDiv = document.getElementById('app');
             try {
                 const { data, error } = await supabaseClient
                     .from('documents')
-                    .select('category, sub_category, title, audio_url, content');
+                    .select('id, category, sub_category, title, audio_url, content, sync_data');
 
                 if (error) throw error;
                 if (!data || data.length === 0) {
@@ -42,7 +66,9 @@
                     return;
                 }
 
+                allDocuments = data;
                 const treeData = {};
+                
                 data.forEach(row => {
                     const cat = row.category || "기타";
                     const sub = row.sub_category ? row.sub_category.trim() : "";
@@ -66,13 +92,13 @@
                     html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
                     
                     content._files.forEach(doc => {
-                        html += renderDoc(doc);
+                        html += `<a class="doc-link" href="#" onclick="openViewer('${doc.title}')">📄 ${doc.title}</a>`;
                     });
 
                     for (const [subcat, docs] of Object.entries(content._subcats).sort()) {
                         html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary><div style="padding: 5px;">`;
                         docs.forEach(doc => {
-                            html += renderDoc(doc);
+                            html += `<a class="doc-link" href="#" onclick="openViewer('${doc.title}')">📄 ${doc.title}</a>`;
                         });
                         html += `</div></details>`;
                     }
@@ -86,20 +112,86 @@
             }
         }
 
-        function renderDoc(doc) {
-            let audioHtml = doc.audio_url 
-                ? `<audio class="audio-player" controls src="${doc.audio_url}"></audio>`
-                : `<div style="font-size: 12px; color: #d32f2f; background: #ffebee; padding: 6px; border-radius: 4px; text-align: center;">⚠️ 오디오 파일이 없습니다.</div>`;
+        function openViewer(title) {
+            event.preventDefault();
+            const doc = allDocuments.find(d => d.title === title);
+            if (!doc) return;
 
-            return `
-                <details class="doc-summary">
-                    <summary>📄 ${doc.title}</summary>
-                    <div class="doc-content">
-                        <div style="font-size: 13px; color: #555; white-space: pre-wrap; margin-bottom: 10px; max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 8px; border-radius: 6px;">${doc.content || '내용이 없습니다.'}</div>
-                        ${audioHtml}
-                    </div>
-                </details>
-            `;
+            document.getElementById('main-view').style.display = 'none';
+            document.getElementById('viewer-container').style.display = 'flex';
+
+            const audio = document.getElementById('audioPlayer');
+            audio.src = doc.audio_url || '';
+
+            const container = document.getElementById('lyricsContainer');
+            container.innerHTML = '';
+
+            const sentences = [];
+            if (doc.content) {
+                doc.content.split(/\r?\n/).forEach(line => {
+                    if (line.trim()) {
+                        const matches = line.match(/([^\r\n.!?]+[.!?]*['"”’]*)/g);
+                        if (matches) {
+                            matches.forEach(s => { if(s.trim()) sentences.push(s.trim()); });
+                        } else {
+                            sentences.push(line.trim());
+                        }
+                    }
+                });
+            }
+
+            if (sentences.length === 0) sentences.push("내용이 없습니다.");
+
+            sentences.forEach((sent, idx) => {
+                const div = document.createElement('div');
+                div.className = 'lyric-line';
+                div.id = 'line-' + idx;
+                div.textContent = sent;
+                container.appendChild(div);
+            });
+
+            const lines = document.querySelectorAll('.lyric-line');
+            let rawSyncData = doc.sync_data;
+
+            audio.ontimeupdate = () => {
+                if (!audio.duration || isNaN(audio.duration) || lines.length === 0) return;
+                const currentTime = audio.currentTime;
+                let activeIndex = 0;
+
+                if (rawSyncData && Array.isArray(rawSyncData) && rawSyncData.length === sentences.length) {
+                    for (let i = 0; i < rawSyncData.length; i++) {
+                        if (currentTime >= rawSyncData[i].start && currentTime <= rawSyncData[i].end) {
+                            activeIndex = i;
+                            break;
+                        } else if (currentTime > rawSyncData[rawSyncData.length - 1].end) {
+                            activeIndex = rawSyncData.length - 1;
+                        }
+                    }
+                } else {
+                    const progress = currentTime / audio.duration;
+                    activeIndex = Math.min(Math.floor(progress * sentences.length), sentences.length - 1);
+                }
+
+                lines.forEach((line, idx) => {
+                    if (idx === activeIndex) {
+                        if (!line.classList.contains('active')) {
+                            line.classList.add('active');
+                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    } else {
+                        line.classList.remove('active');
+                    }
+                });
+            };
+            audio.play().catch(e => console.log("자동 재생 제한:", e));
+        }
+
+        function closeViewer() {
+            const audio = document.getElementById('audioPlayer');
+            audio.pause();
+            audio.currentTime = 0;
+            document.getElementById('viewer-container').style.display = 'none';
+            document.getElementById('main-view').style.display = 'block';
         }
 
         loadData();
