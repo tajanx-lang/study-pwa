@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>誦서율창 클라우드</title>
+    <title>誦書律唱(송서율창) 클라우드</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; }
@@ -18,7 +18,7 @@
         .doc-content { padding: 12px; background: #fff; border-top: 1px solid #eee; }
         .audio-label { font-size: 12px; color: #555; margin: 6px 0 2px 2px; font-weight: bold; }
         .btn-view { display: block; text-align: center; background: #2e7d32; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; cursor: pointer; }
-        .btn-download { display: block; text-align: center; background: #007aff; color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 12px; }
+        .btn-download { display: block; text-align: center; background: #007aff; color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 12px; cursor: pointer; }
         .no-audio { font-size: 12px; color: #d32f2f; background: #ffebee; padding: 8px; border-radius: 6px; text-align: center; }
         .loading { text-align: center; color: #777; margin-top: 40px; font-size: 15px; }
 
@@ -127,12 +127,11 @@
         }
 
         function renderDocBox(doc) {
-            // 💡 파일 이름을 해시 코드가 아닌 문서 제목(.mp3)으로 표시
             let audioName = `${doc.title}.mp3`;
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${audioName}</div>
                 <a class="btn-view" onclick="openViewer('${doc.title}')">📖 정밀 자막과 함께 듣기</a>
-                <a class="btn-download" href="${doc.audio_url}" download="${audioName}">📥 다운로드 (${audioName})</a>
+                <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${audioName}')">📥 다운로드 (${audioName})</a>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
@@ -143,6 +142,29 @@
                     </div>
                 </details>
             `;
+        }
+
+        // 💡 문서 이름으로 파일이 강제 저장되도록 처리하는 다운로드 함수
+        async function downloadAudioFile(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                // CORS 등으로 실패 시 새 창으로 열기
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.download = filename;
+                a.click();
+            }
         }
 
         function openViewer(title) {
