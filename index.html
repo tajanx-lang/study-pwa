@@ -17,7 +17,16 @@
         .cat-summary { font-size: 17px; color: #0b3c5d; background: #eef3f8; border-bottom: 1px solid #d0e1fd; }
         .subcat-summary { font-size: 15px; color: #1e6f3d; background: #f4f8f4; margin: 6px 10px; border-radius: 8px; border: 1px solid #c8e6c9; }
         
-        .doc-summary { font-size: 14px; color: #333; background: #fafafa; margin: 6px 15px; border-radius: 8px; border: 1px solid #e0e0e0; }
+        /* 폴더 내부 상단 컨트롤 바 (전체선택 및 연속재생 버튼) */
+        .folder-controls { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; font-size: 13px; font-weight: bold; }
+        .folder-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #333; }
+        .btn-playlist-play { background: #2e7d32; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn-playlist-play:hover { background: #1b5e20; }
+
+        .doc-summary { font-size: 14px; color: #333; background: #fafafa; margin: 6px 15px; border-radius: 8px; border: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; padding-right: 15px; }
+        .doc-summary summary { flex: 1; padding: 12px 16px; }
+        .doc-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #2e7d32; }
+
         .doc-content { padding: 12px; background: #fff; border-top: 1px solid #eee; }
         .audio-label { font-size: 12px; color: #555; margin: 6px 0 2px 2px; font-weight: bold; }
         .btn-view { display: block; text-align: center; background: #2e7d32; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; cursor: pointer; }
@@ -88,10 +97,13 @@
 
         /* 전체 화면 뷰어 스타일 */
         #viewer-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #121212; color: #fff; flex-direction: column; z-index: 1000; }
-        .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 12px 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 8px; }
         .top-player audio { width: 100%; }
-        .back-btn { display: inline-block; margin-bottom: 8px; color: #90caf9; text-decoration: none; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .lyrics-container { margin-top: 130px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
+        .player-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .back-btn { color: #90caf9; text-decoration: none; font-weight: bold; cursor: pointer; }
+        .playlist-status { color: #ffeb3b; font-weight: bold; }
+        
+        .lyrics-container { margin-top: 150px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
         .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
         .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
     </style>
@@ -120,7 +132,10 @@
     <!-- 전체 화면 자막 동기화 뷰어 -->
     <div id="viewer-container">
         <div class="top-player">
-            <a class="back-btn" onclick="closeViewer()">⬅ 목록으로 돌아가기</a>
+            <div class="player-info-row">
+                <a class="back-btn" onclick="closeViewer()">⬅ 목록으로 돌아가기</a>
+                <span id="playlistStatus" class="playlist-status">재생 중: 1 / 1</span>
+            </div>
             <audio id="audioPlayer" controls></audio>
         </div>
         <div class="lyrics-container" id="lyricsContainer"></div>
@@ -132,8 +147,11 @@
         
         let supabaseClient;
         let allDocuments = [];
+        
+        // 연속 재생 상태 관리 변수
+        let currentPlaylist = [];
+        let currentPlaylistIndex = 0;
 
-        // 이달의 인증 코드 자동 생성 함수 (오타 수정됨)
         function initMonthlyAuthCode() {
             try {
                 const secretSalt = "My_Super_Secret_Key_2026_StudyRoom!";
@@ -149,15 +167,12 @@
             }
         }
 
-        // 인증 코드 클립보드 복사 함수
         function copyAuthCode() {
             const codeText = document.getElementById('authCodeText').textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(codeText).then(() => {
                     alert('인증 코드가 복사되었습니다: ' + codeText);
-                }).catch(() => {
-                    fallbackCopy(codeText);
-                });
+                }).catch(() => { fallbackCopy(codeText); });
             } else {
                 fallbackCopy(codeText);
             }
@@ -229,19 +244,39 @@
                     const content = treeData[cat];
                     html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
                     
-                    content._files.sort((a, b) => naturalSort(a.title, b.title));
-                    content._files.forEach(doc => {
-                        html += renderDocBox(doc);
-                    });
+                    // 과목 바로 아래 파일들 처리
+                    if (content._files.length > 0) {
+                        content._files.sort((a, b) => naturalSort(a.title, b.title));
+                        const folderId = `cat_${cat.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        html += `
+                            <div class="folder-controls">
+                                <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
+                                <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">▶ 선택한 문서 연속 재생</button>
+                            </div>
+                            <div id="${folderId}">
+                        `;
+                        content._files.forEach(doc => {
+                            html += renderDocBox(doc, folderId);
+                        });
+                        html += `</div>`;
+                    }
 
                     const sortedSubcats = Object.keys(content._subcats).sort(naturalSort);
                     for (const subcat of sortedSubcats) {
-                        html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary><div style="padding: 5px;">`;
-                        
                         const docs = content._subcats[subcat];
                         docs.sort((a, b) => naturalSort(a.title, b.title));
+                        const folderId = `sub_${cat.replace(/[^a-zA-Z0-9]/g, '_')}_${subcat.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        
+                        html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary>`;
+                        html += `
+                            <div class="folder-controls">
+                                <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
+                                <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">▶ 선택한 문서 연속 재생</button>
+                            </div>
+                            <div id="${folderId}" style="padding: 5px;">
+                        `;
                         docs.forEach(doc => {
-                            html += renderDocBox(doc);
+                            html += renderDocBox(doc, folderId);
                         });
                         html += `</div></details>`;
                     }
@@ -255,55 +290,81 @@
             }
         }
 
-        function renderDocBox(doc) {
+        function renderDocBox(doc, folderId) {
             let audioName = `${doc.title}.mp3`;
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${audioName}</div>
-                <a class="btn-view" onclick="openViewer('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
+                <a class="btn-view" onclick="openViewerByTitle('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
                 <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
-                <details class="doc-summary">
-                    <summary>📄 ${doc.title}</summary>
-                    <div class="doc-content">
-                        ${audioContentHtml}
-                    </div>
-                </details>
+                <div class="doc-summary">
+                    <details style="flex:1; margin:0; background:transparent; box-shadow:none;">
+                        <summary style="padding:10px 12px;">📄 ${doc.title}</summary>
+                        <div class="doc-content">
+                            ${audioContentHtml}
+                        </div>
+                    </details>
+                    <input type="checkbox" class="doc-checkbox ${folderId}" value="${doc.title}">
+                </div>
             `;
         }
 
-        function escapeTitle(str) {
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        function toggleSelectAll(masterCheckbox, folderId) {
+            const checkboxes = document.querySelectorAll(`input.doc-checkbox.${folderId}`);
+            checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
         }
 
-        async function downloadAudioFile(url, filename) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(blobUrl);
-            } catch (e) {
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                a.download = filename;
-                a.click();
+        // 체크된 문서들 연속 재생 시작
+        function playSelectedFolder(folderId) {
+            const checkboxes = document.querySelectorAll(`input.doc-checkbox.${folderId}:checked`);
+            if (checkboxes.length === 0) {
+                alert("재생할 문서를 하나 이상 선택해주세요.");
+                return;
             }
+
+            currentPlaylist = [];
+            checkboxes.forEach(cb => {
+                const doc = allDocuments.find(d => d.title === cb.value);
+                if (doc && doc.audio_url) {
+                    currentPlaylist.push(doc);
+                }
+            });
+
+            if (currentPlaylist.length === 0) {
+                alert("선택된 문서 중 오디오가 연결된 파일이 없습니다.");
+                return;
+            }
+
+            currentPlaylistIndex = 0;
+            startPlaylistPlayback();
         }
 
-        function openViewer(title) {
+        // 단건 재생 (개별 문서에서 '정밀 자막과 함께 듣기' 누를 때)
+        function openViewerByTitle(title) {
             const doc = allDocuments.find(d => d.title === title);
-            if (!doc) return;
+            if (!doc || !doc.audio_url) {
+                alert("연결된 오디오 파일이 없습니다.");
+                return;
+            }
+            currentPlaylist = [doc];
+            currentPlaylistIndex = 0;
+            startPlaylistPlayback();
+        }
 
+        function startPlaylistPlayback() {
             document.getElementById('main-view').style.display = 'none';
             document.getElementById('viewer-container').style.display = 'flex';
+            loadAndPlayIndex(currentPlaylistIndex);
+        }
+
+        function loadAndPlayIndex(index) {
+            if (index < 0 || index >= currentPlaylist.length) return;
+            currentPlaylistIndex = index;
+
+            const doc = currentPlaylist[index];
+            document.getElementById('playlistStatus').textContent = `재생 중: ${index + 1} / ${currentPlaylist.length} (${doc.title})`;
 
             const audio = document.getElementById('audioPlayer');
             audio.src = doc.audio_url || '';
@@ -379,13 +440,50 @@
                     }
                 });
             };
+
+            // 💡 현재 곡이 끝나면 자동으로 다음 곡으로 넘어가도록 처리
+            audio.onended = () => {
+                if (currentPlaylistIndex + 1 < currentPlaylist.length) {
+                    loadAndPlayIndex(currentPlaylistIndex + 1);
+                } else {
+                    alert("모든 곡의 재생이 완료되었습니다.");
+                    closeViewer();
+                }
+            };
+
             audio.play().catch(e => console.log("자동 재생 제한:", e));
+        }
+
+        function escapeTitle(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        async function downloadAudioFile(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.download = filename;
+                a.click();
+            }
         }
 
         function closeViewer() {
             const audio = document.getElementById('audioPlayer');
             audio.pause();
             audio.currentTime = 0;
+            audio.onended = null;
             document.getElementById('viewer-container').style.display = 'none';
             document.getElementById('main-view').style.display = 'block';
         }
