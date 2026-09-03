@@ -133,14 +133,14 @@
         let supabaseClient;
         let allDocuments = [];
 
-        // 이달의 인증 코드 자동 생성 함수
+        // 이달의 인증 코드 자동 생성 함수 (오타 수정됨)
         function initMonthlyAuthCode() {
             try {
                 const secretSalt = "My_Super_Secret_Key_2026_StudyRoom!";
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
-                const combined = `${secret_salt}_${year}-${month}`;
+                const combined = `${secretSalt}_${year}-${month}`;
                 const hash = CryptoJS.MD5(combined).toString();
                 const code = hash.substring(0, 8).toUpperCase();
                 document.getElementById('authCodeText').textContent = code;
@@ -149,7 +149,7 @@
             }
         }
 
-        // 인증 코드 클립보드 복사 함수 (아이폰 사파리 호환 개선)
+        // 인증 코드 클립보드 복사 함수
         function copyAuthCode() {
             const codeText = document.getElementById('authCodeText').textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
