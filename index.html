@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>誦書律唱(송서율창) 클라우드</title>
+    <title>誦서율창 클라우드</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; }
@@ -34,7 +34,7 @@
 </head>
 <body>
     <div id="main-view">
-        <h2>📜 誦書律唱(송서율창) 클라우드</h2>
+        <h2>📜 誦書律唱(송서율창) 클라우드</h2>
         <div class="subtitle">과목 ➔ 분류 ➔ 문서 아코디언 트리 시스템 (순서 정렬 적용)</div>
         <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
     </div>
@@ -55,7 +55,6 @@
 
         let allDocuments = [];
 
-        // 💡 숫자를 올바르게 비교하는 자연스러운 정렬 함수 (예: 2번이 10번보다 앞으로 오도록)
         function naturalSort(a, b) {
             return a.localeCompare(b, 'ko', { numeric: true, sensitivity: 'base' });
         }
@@ -95,26 +94,21 @@
                 });
 
                 let html = '';
-                
-                // 💡 과목(Category) 순서대로 정렬
                 const sortedCategories = Object.keys(treeData).sort(naturalSort);
 
                 for (const cat of sortedCategories) {
                     const content = treeData[cat];
                     html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
                     
-                    // 과목 바로 아래 문서들 정렬
                     content._files.sort((a, b) => naturalSort(a.title, b.title));
                     content._files.forEach(doc => {
                         html += renderDocBox(doc);
                     });
 
-                    // 💡 하위 분류(Subcategory) 순서대로 정렬
                     const sortedSubcats = Object.keys(content._subcats).sort(naturalSort);
                     for (const subcat of sortedSubcats) {
                         html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary><div style="padding: 5px;">`;
                         
-                        // 분류 아래 문서들 정렬
                         const docs = content._subcats[subcat];
                         docs.sort((a, b) => naturalSort(a.title, b.title));
                         docs.forEach(doc => {
@@ -133,11 +127,12 @@
         }
 
         function renderDocBox(doc) {
-            let audioName = doc.audio_url ? doc.audio_url.split('/').pop() : `${doc.title}.mp3`;
+            // 💡 파일 이름을 해시 코드가 아닌 문서 제목(.mp3)으로 표시
+            let audioName = `${doc.title}.mp3`;
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${audioName}</div>
                 <a class="btn-view" onclick="openViewer('${doc.title}')">📖 정밀 자막과 함께 듣기</a>
-                <a class="btn-download" href="${doc.audio_url}" download>📥 다운로드 (${audioName})</a>
+                <a class="btn-download" href="${doc.audio_url}" download="${audioName}">📥 다운로드 (${audioName})</a>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
