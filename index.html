@@ -311,17 +311,21 @@
 
         function renderDocBox(doc, folderId) {
             let audioName = `${doc.title}.mp3`;
+            
+            // githubShareUrl 변수를 함수 내부에서 정확히 선언
+            let githubShareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
+        
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${audioName}</div>
                 <a class="btn-view" onclick="openViewerByTitle('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
                 <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
-                <!-- 💡 GitHub 실행 링크 복사 입력창 및 버튼 -->
+                
                 <div class="link-box">
                     <input type="text" id="link-${doc.id}" class="link-input" value="${githubShareUrl}" readonly>
                     <button class="btn-copy-link" onclick="copyAudioLink('link-${doc.id}')">📋 GitHub 실행 링크 복사</button>
                 </div>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
-
+        
             return `
                 <div class="doc-summary">
                     <details style="flex:1; margin:0; background:transparent; box-shadow:none;">
