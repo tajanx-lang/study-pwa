@@ -296,6 +296,14 @@
                 }
 
                 appDiv.innerHTML = html;
+                // 💡 [추가] 공유된 GitHub 링크(?title=문서이름)로 접속했을 경우 자동 실행
+                const urlParams = new URLSearchParams(window.location.search);
+                const targetTitle = urlParams.get('title');
+                if (targetTitle) {
+                    setTimeout(() => {
+                        openViewerByTitle(targetTitle);
+                    }, 300);
+                }
             } catch (err) {
                 appDiv.innerHTML = `<div style="text-align:center; color:#d32f2f; margin-top:40px;">데이터 로드 오류: ${err.message}</div>`;
             }
@@ -307,10 +315,10 @@
                 <div class="audio-label">🎵 ${audioName}</div>
                 <a class="btn-view" onclick="openViewerByTitle('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
                 <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
-                <!-- 💡 [추가] 오디오 직링크 복사 입력창 및 버튼 -->
+                <!-- 💡 GitHub 실행 링크 복사 입력창 및 버튼 -->
                 <div class="link-box">
-                    <input type="text" id="link-${doc.id}" class="link-input" value="${doc.audio_url}" readonly>
-                    <button class="btn-copy-link" onclick="copyAudioLink('link-${doc.id}')">📋 링크 복사</button>
+                    <input type="text" id="link-${doc.id}" class="link-input" value="${githubShareUrl}" readonly>
+                    <button class="btn-copy-link" onclick="copyAudioLink('link-${doc.id}')">📋 GitHub 실행 링크 복사</button>
                 </div>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
