@@ -311,10 +311,8 @@
 
         function renderDocBox(doc, folderId) {
             let audioName = `${doc.title}.mp3`;
-            
-            // githubShareUrl 변수를 함수 내부에서 정확히 선언
-            let githubShareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
         
+            // 변수를 따로 쓰지 않고 주소를 직접 대입하여 에러 원천 차단
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${audioName}</div>
                 <a class="btn-view" onclick="openViewerByTitle('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
