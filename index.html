@@ -321,7 +321,7 @@
                 <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
                 
                 <div class="link-box">
-                    <input type="text" id="link-${doc.id}" class="link-input" value="${githubShareUrl}" readonly>
+                    <input type="text" id="link-${doc.id}" class="link-input" value="${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}" readonly>
                     <button class="btn-copy-link" onclick="copyAudioLink('link-${doc.id}')">📋 GitHub 실행 링크 복사</button>
                 </div>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
