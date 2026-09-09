@@ -110,6 +110,11 @@
         .lyrics-container { margin-top: 150px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
         .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
         .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
+        /* 링크 복사 영역 스타일 */
+        .link-box { display: flex; margin-top: 8px; gap: 4px; }
+        .link-input { flex: 1; padding: 6px 8px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; color: #333; }
+        .btn-copy-link { background: #ff9800; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        .btn-copy-link:active { background: #e68900; }
     </style>
 </head>
 <body>
@@ -302,6 +307,11 @@
                 <div class="audio-label">🎵 ${audioName}</div>
                 <a class="btn-view" onclick="openViewerByTitle('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
                 <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
+                <!-- 💡 [추가] 오디오 직링크 복사 입력창 및 버튼 -->
+                <div class="link-box">
+                    <input type="text" id="link-${doc.id}" class="link-input" value="${doc.audio_url}" readonly>
+                    <button class="btn-copy-link" onclick="copyAudioLink('link-${doc.id}')">📋 링크 복사</button>
+                </div>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
@@ -501,6 +511,31 @@
             initMonthlyAuthCode();
             loadData();
         });
+        function copyAudioLink(elementId) {
+            const inputElement = document.getElementById(elementId);
+            const fullUrl = inputElement.value;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullUrl).then(() => {
+                    alert("오디오 링크가 클립보드에 복사되었습니다!\n" + fullUrl);
+                }).catch(() => {
+                    fallbackCopyLink(inputElement, fullUrl);
+                });
+            } else {
+                fallbackCopyLink(inputElement, fullUrl);
+            }
+        }
+        
+        function fallbackCopyLink(inputElement, fullUrl) {
+            inputElement.select();
+            inputElement.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                alert("링크가 복사되었습니다: " + fullUrl);
+            } catch (err) {
+                alert("브라우저가 클립보드 복사를 지원하지 않습니다. 주소를 직접 복사해주세요.");
+            }
+        }
     </script>
 </body>
 </html>
