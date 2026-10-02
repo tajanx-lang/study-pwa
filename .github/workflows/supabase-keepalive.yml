@@ -1,4 +1,4 @@
-name: Supabase Keep Alive
+name: Project Keep Alive
 
 on:
   schedule:
@@ -7,25 +7,39 @@ on:
   workflow_dispatch: # 수동으로도 테스트 실행 가능
 
 jobs:
-  ping-supabase:
+  ping-projects:
     runs-on: ubuntu-latest
     steps:
-      - name: Send request to Supabase
+      - name: Ping Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          echo "Pinging Supabase project to keep it alive..."
+          echo "Pinging Supabase..."
           response=$(curl -s -L -o /dev/null -w "%{http_code}" \
             "$SUPABASE_URL/rest/v1/" \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY")
           
-          echo "HTTP Response Code: $response"
-          
+          echo "Supabase HTTP Response Code: $response"
           if [ "$response" -eq 200 ] || [ "$response" -eq 401 ] || [ "$response" -eq 301 ]; then
-            echo "Successfully pinged Supabase!"
+            echo "Supabase ping success!"
           else
-            echo "Failed with response code: $response"
+            echo "Supabase failed with code: $response"
+            exit 1
+          fi
+
+      - name: Ping PythonAnywhere
+        env:
+          PYTHONANYWHERE_URL: ${{ secrets.PYTHONANYWHERE_URL }}
+        run: |
+          echo "Pinging PythonAnywhere..."
+          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" "$PYTHONANYWHERE_URL")
+          
+          echo "PythonAnywhere HTTP Response Code: $pa_response"
+          if [ "$pa_response" -eq 200 ] || [ "$pa_response" -eq 301 ] || [ "$pa_response" -eq 302 ]; then
+            echo "PythonAnywhere ping success!"
+          else
+            echo "PythonAnywhere failed with code: $pa_response"
             exit 1
           fi
