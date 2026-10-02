@@ -2,7 +2,6 @@ name: PythonAnywhere Auto Extend
 
 on:
   schedule:
-    # 매달 1일마다 실행 (원하시는 주기로 변경 가능)
     - cron: '0 0 1 * *'
   workflow_dispatch: # 수동 테스트 가능
 
@@ -36,7 +35,7 @@ jobs:
 
           def extend_account(username, password):
               if not username or not password:
-                  print("계정 정보가 없습니다.")
+                  print(f"[{username}] 계정 정보가 없습니다.")
                   return
               
               print(f"[{username}] PythonAnywhere 자동 연장 시작...")
@@ -56,22 +55,21 @@ jobs:
                       page.goto(f"https://www.pythonanywhere.com/user/{username}/webapps/")
                       page.wait_for_load_state("networkidle")
                       
-                      # 3. 노란색 연장 버튼("오늘부터 한 달 동안") 클릭 시도
-                      # 텍스트가 포함된 버튼을 찾아 클릭합니다.
-                      button = page.get_by_role("button", name="오늘부터 한 달 동안")
-                      if button.is_count_greater_than(0) and button.first.is_visible():
+                      # 3. 노란색 연장 버튼("Run until 1 month from today") 찾기 및 클릭
+                      button = page.get_by_text("Run until 1 month from today")
+                      if button.count() > 0 and button.first.is_visible():
                           button.first.click()
-                          print(f"[{username}] 노란색 연장 버튼 클릭 성공!")
+                          print(f"[{username}] 'Run until 1 month from today' 버튼 클릭 성공!")
                           page.wait_for_timeout(3000)
                       else:
-                          print(f"[{username}] 연장 버튼이 보이지 않거나 이미 연장된 상태입니다.")
+                          print(f"[{username}] 연장 버튼이 보이지 않습니다. (이미 연장되었거나 대상 아님)")
                           
                   except Exception as e:
                       print(f"[{username}] 오류 발생: {e}")
+                      raise e
                   finally:
                       browser.close()
 
-          # 두 계정 실행
           extend_account(os.environ.get("PA_USER_1"), os.environ.get("PA_PASS_1"))
           extend_account(os.environ.get("PA_USER_2"), os.environ.get("PA_PASS_2"))
           EOF
