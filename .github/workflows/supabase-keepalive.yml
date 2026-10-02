@@ -16,14 +16,14 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           echo "Pinging Supabase project to keep it alive..."
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
+          response=$(curl -s -L -o /dev/null -w "%{http_code}" \
             "$SUPABASE_URL/rest/v1/" \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY")
           
           echo "HTTP Response Code: $response"
           
-          if [ "$response" -eq 200 ] || [ "$response" -eq 401 ]; then
+          if [ "$response" -eq 200 ] || [ "$response" -eq 401 ] || [ "$response" -eq 301 ]; then
             echo "Successfully pinged Supabase!"
           else
             echo "Failed with response code: $response"
