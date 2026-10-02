@@ -29,17 +29,32 @@ jobs:
             exit 1
           fi
 
-      - name: Ping PythonAnywhere
+      - name: Ping PythonAnywhere (cskim120)
         env:
-          PYTHONANYWHERE_URL: ${{ secrets.PYTHONANYWHERE_URL }}
+          PA_URL: ${{ secrets.PYTHONANYWHERE_URL_1 }}
         run: |
-          echo "Pinging PythonAnywhere..."
-          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" "$PYTHONANYWHERE_URL")
+          echo "Pinging PythonAnywhere (cskim120)..."
+          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" "$PA_URL")
           
-          echo "PythonAnywhere HTTP Response Code: $pa_response"
+          echo "Response Code: $pa_response"
           if [ "$pa_response" -eq 200 ] || [ "$pa_response" -eq 301 ] || [ "$pa_response" -eq 302 ]; then
-            echo "PythonAnywhere ping success!"
+            echo "PythonAnywhere (cskim120) ping success!"
           else
-            echo "PythonAnywhere failed with code: $pa_response"
+            echo "Failed with code: $pa_response"
+            exit 1
+          fi
+
+      - name: Ping PythonAnywhere (tajanx)
+        env:
+          PA_URL: ${{ secrets.PYTHONANYWHERE_URL_2 }}
+        run: |
+          echo "Pinging PythonAnywhere (tajanx)..."
+          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" "$PA_URL")
+          
+          echo "Response Code: $pa_response"
+          if [ "$pa_response" -eq 200 ] || [ "$pa_response" -eq 301 ] || [ "$pa_response" -eq 302 ]; then
+            echo "PythonAnywhere (tajanx) ping success!"
+          else
+            echo "Failed with code: $pa_response"
             exit 1
           fi
