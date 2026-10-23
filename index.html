@@ -278,13 +278,14 @@
                 let html = '';
                 const sortedCategories = Object.keys(treeData).sort(naturalSort);
 
-                for (const cat of sortedCategories) {
+                sortedCategories.forEach((cat, catIndex) => {
                     const content = treeData[cat];
-                    html += `<details><summary class="cat-summary">📚 ${cat}</summary><div style="padding: 10px;">`;
+                    html += `<details><summary class="cat-summary">📚 ${escapeHtml(cat)}</summary><div style="padding: 10px;">`;
                     
                     if (content._files.length > 0) {
                         content._files.sort((a, b) => naturalSort(a.title, b.title));
-                        const folderId = `cat_${cat.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        // 한글 이름은 모두 '_'로 바뀌어 겹칠 수 있으므로 순번으로 id 를 만든다
+                        const folderId = `cat_${catIndex}`;
                         html += `
                             <div class="folder-controls">
                                 <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
@@ -299,12 +300,12 @@
                     }
 
                     const sortedSubcats = Object.keys(content._subcats).sort(naturalSort);
-                    for (const subcat of sortedSubcats) {
+                    sortedSubcats.forEach((subcat, subIndex) => {
                         const docs = content._subcats[subcat];
                         docs.sort((a, b) => naturalSort(a.title, b.title));
-                        const folderId = `sub_${cat.replace(/[^a-zA-Z0-9]/g, '_')}_${subcat.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        const folderId = `sub_${catIndex}_${subIndex}`;
                         
-                        html += `<details class="subcat-summary"><summary>📁 ${subcat}</summary>`;
+                        html += `<details class="subcat-summary"><summary>📁 ${escapeHtml(subcat)}</summary>`;
                         html += `
                             <div class="folder-controls">
                                 <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
@@ -316,10 +317,10 @@
                             html += renderDocBox(doc, folderId);
                         });
                         html += `</div></details>`;
-                    }
+                    });
 
                     html += `</div></details>`;
-                }
+                });
 
                 appDiv.innerHTML = html;
 
@@ -333,34 +334,48 @@
                 }
 
             } catch (err) {
-                appDiv.innerHTML = `<div style="text-align:center; color:#d32f2f; margin-top:40px;">데이터 로드 오류: ${err.message}</div>`;
+                appDiv.innerHTML = `<div style="text-align:center; color:#d32f2f; margin-top:40px;">데이터 로드 오류: ${escapeHtml(err.message)}</div>`;
             }
         }
 
+        // 문서 이름·분류에 < > " ' 같은 기호가 있어도 화면이 깨지지 않도록 글자로만 표시한다.
+        // 버튼에는 이름 대신 문서 번호(id)를 넘긴다.
         function renderDocBox(doc, folderId) {
-            let audioName = `${doc.title}.mp3`;
+            const id = Number(doc.id);
+            const audioName = `${doc.title}.mp3`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
             let audioContentHtml = doc.audio_url ? `
-                <div class="audio-label">🎵 ${audioName}</div>
-                <a class="btn-view" onclick="openViewerByTitle('${escapeTitle(doc.title)}')">📖 정밀 자막과 함께 듣기</a>
-                <a class="btn-download" onclick="downloadAudioFile('${doc.audio_url}', '${escapeTitle(audioName)}')">📥 다운로드 (${audioName})</a>
+                <div class="audio-label">🎵 ${escapeHtml(audioName)}</div>
+                <a class="btn-view" onclick="openViewerById(${id})">📖 정밀 자막과 함께 듣기</a>
+                <a class="btn-download" onclick="downloadAudioById(${id})">📥 다운로드 (${escapeHtml(audioName)})</a>
                 
                 <div class="link-box">
-                    <input type="text" id="link-${doc.id}" class="link-input" value="${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}" readonly>
-                    <button class="btn-copy-link" onclick="copyAudioLink('link-${doc.id}')">📋 GitHub 실행 링크 복사</button>
+                    <input type="text" id="link-${id}" class="link-input" value="${escapeHtml(shareUrl)}" readonly>
+                    <button class="btn-copy-link" onclick="copyAudioLink('link-${id}')">📋 GitHub 실행 링크 복사</button>
                 </div>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
                 <div class="doc-summary">
                     <details style="flex:1; margin:0; background:transparent; box-shadow:none;">
-                        <summary style="padding:10px 12px;">📄 ${doc.title}</summary>
+                        <summary style="padding:10px 12px;">📄 ${escapeHtml(doc.title)}</summary>
                         <div class="doc-content">
                             ${audioContentHtml}
                         </div>
                     </details>
-                    <input type="checkbox" class="doc-checkbox ${folderId}" value="${doc.title}">
+                    <input type="checkbox" class="doc-checkbox ${folderId}" value="${id}">
                 </div>
             `;
+        }
+
+        function openViewerById(id) {
+            const doc = allDocuments.find(d => Number(d.id) === id);
+            if (doc) openViewerByTitle(doc.title);
+        }
+
+        function downloadAudioById(id) {
+            const doc = allDocuments.find(d => Number(d.id) === id);
+            if (doc && doc.audio_url) downloadAudioFile(doc.audio_url, `${doc.title}.mp3`);
         }
 
         function toggleSelectAll(masterCheckbox, folderId) {
@@ -377,7 +392,7 @@
 
             currentPlaylist = [];
             checkboxes.forEach(cb => {
-                const doc = allDocuments.find(d => d.title === cb.value);
+                const doc = allDocuments.find(d => String(d.id) === cb.value);
                 if (doc && doc.audio_url) {
                     currentPlaylist.push(doc);
                 }
@@ -508,8 +523,8 @@
             audio.play().catch(e => console.log("자동 재생 제한:", e));
         }
 
-        function escapeTitle(str) {
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
         }
 
         async function downloadAudioFile(url, filename) {
