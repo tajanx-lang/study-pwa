@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>정밀 자막 동기화 재생</title>
     <style>
-        body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; background: #121212; color: #fff; display: flex; flex-direction: column; height: 100vh; }
-        .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; background: #121212; color: #fff; display: flex; flex-direction: column; align-items: center; height: 100vh; }
+        /* 넓은 화면에서도 휴대폰 화면 크기의 카드처럼 가운데에 보이게 한다 */
+        .top-player { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .lyrics-container { width: 100%; max-width: 560px; box-sizing: border-box; }
+        @media (min-width: 600px) {
+            body { background: #0a0a0a; }
+            .top-player { border-radius: 0 0 12px 12px; }
+            .lyrics-container { background: #121212; }
+        }
         audio { width: 100%; }
-        .back-btn { color: #90caf9; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block; margin-bottom: 8px; }
+        .back-btn { color: #90caf9; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block; margin-bottom: 8px; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; }
         .lyrics-container { margin-top: 130px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
         .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
         .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
@@ -16,7 +23,7 @@
 </head>
 <body>
     <div class="top-player">
-        <a class="back-btn" href="index.html">⬅ 목록으로 돌아가기</a>
+        <a class="back-btn" id="backBtn" href="index.html">⬅ 목록으로 돌아가기</a>
         <audio id="audioPlayer" controls></audio>
     </div>
     <div class="lyrics-container" id="lyricsContainer">로딩 중...</div>
@@ -29,6 +36,21 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const docId = urlParams.get('id');
+
+        // 블로그 글의 링크로 들어온 경우: '블로그로 돌아가기' (이 탭을 닫거나 이전 페이지로)
+        const fromBlog = urlParams.get('from') === 'blog' || /blog\.naver\.com/.test(document.referrer);
+        if (fromBlog) {
+            const back = document.getElementById('backBtn');
+            back.textContent = '⬅ 블로그로 돌아가기';
+            back.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.close();
+                setTimeout(() => {
+                    if (history.length > 1) history.back();
+                    else location.href = document.referrer || 'https://blog.naver.com/tajanx';
+                }, 300);
+            });
+        }
 
         async function loadDocDetail() {
             let { data: doc, error } = await _supabase.from('documents').select('*').eq('id', docId).single();
