@@ -2,8 +2,8 @@ name: Project Keep Alive
 
 on:
   schedule:
-    # 매주 월요일 오전 9시 (UTC 기준 0시)에 실행
-    - cron: '0 0 * * 1'
+    # 매주 월요일·목요일 오전 9시 (UTC 기준 0시)에 실행
+    - cron: '0 0 * * 1,4'
   workflow_dispatch: # 수동으로도 테스트 실행 가능
 
 jobs:
@@ -16,13 +16,16 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           echo "Pinging Supabase..."
-          response=$(curl -s -L -o /dev/null -w "%{http_code}" \
-            "$SUPABASE_URL/rest/v1/" \
+          # 실제로 문서 1줄을 읽어서 데이터베이스까지 사용 기록이 남게 한다.
+          # 연결이 잠깐 끊겨도 30초 간격으로 5번까지 다시 시도한다.
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --retry 5 --retry-delay 30 --retry-all-errors \
+            "${SUPABASE_URL%/}/rest/v1/documents?select=id&limit=1" \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY")
-          
+
           echo "Supabase HTTP Response Code: $response"
-          if [ "$response" -eq 200 ] || [ "$response" -eq 401 ] || [ "$response" -eq 301 ]; then
+          if [ "$response" -eq 200 ]; then
             echo "Supabase ping success!"
           else
             echo "Supabase failed with code: $response"
@@ -30,12 +33,14 @@ jobs:
           fi
 
       - name: Ping PythonAnywhere (cskim120)
+        if: always()
         env:
           PA_URL: ${{ secrets.PYTHONANYWHERE_URL_1 }}
         run: |
           echo "Pinging PythonAnywhere (cskim120)..."
-          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" "$PA_URL")
-          
+          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" \
+            --retry 5 --retry-delay 30 --retry-all-errors "$PA_URL")
+
           echo "Response Code: $pa_response"
           if [ "$pa_response" -eq 200 ] || [ "$pa_response" -eq 301 ] || [ "$pa_response" -eq 302 ]; then
             echo "PythonAnywhere (cskim120) ping success!"
@@ -45,12 +50,14 @@ jobs:
           fi
 
       - name: Ping PythonAnywhere (tajanx)
+        if: always()
         env:
           PA_URL: ${{ secrets.PYTHONANYWHERE_URL_2 }}
         run: |
           echo "Pinging PythonAnywhere (tajanx)..."
-          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" "$PA_URL")
-          
+          pa_response=$(curl -s -L -o /dev/null -w "%{http_code}" \
+            --retry 5 --retry-delay 30 --retry-all-errors "$PA_URL")
+
           echo "Response Code: $pa_response"
           if [ "$pa_response" -eq 200 ] || [ "$pa_response" -eq 301 ] || [ "$pa_response" -eq 302 ]; then
             echo "PythonAnywhere (tajanx) ping success!"
