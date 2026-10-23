@@ -18,7 +18,7 @@ jobs:
           echo "Pinging Supabase..."
           # 실제로 문서 1줄을 읽어서 데이터베이스까지 사용 기록이 남게 한다.
           # 연결이 잠깐 끊겨도 30초 간격으로 5번까지 다시 시도한다.
-          response=$(curl -s -o body.txt -w "%{http_code}" \
+          response=$(curl -s -L -o body.txt -w "%{http_code}" \
             --retry 5 --retry-delay 30 --retry-all-errors \
             "${SUPABASE_URL%/}/rest/v1/documents?select=id&limit=1" \
             -H "apikey: $SUPABASE_ANON_KEY" \
