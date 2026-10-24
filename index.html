@@ -95,17 +95,22 @@
         }
         .hero::after {
             /* 오른쪽에 큰 한자를 옅게 깔아 분위기를 낸다 */
-            content: "誦"; position: absolute; right: -20px; bottom: -70px;
-            font-family: var(--serif); font-size: 320px; font-weight: 700; line-height: 1;
-            color: rgba(255, 255, 255, 0.05); pointer-events: none;
+            content: "誦"; position: absolute; right: 4%; bottom: -40px;
+            font-family: var(--serif); font-size: 200px; font-weight: 700; line-height: 1;
+            color: rgba(255, 255, 255, 0.035); pointer-events: none;
         }
-        .hero-inner { position: relative; z-index: 1; padding: 72px 20px 80px; }
+        @media (max-width: 640px) { .hero::after { display: none; } }
+        .hero-inner { position: relative; z-index: 1; padding: 60px 20px 64px; }
         .hero-kicker {
             display: inline-block; margin-bottom: 18px; padding: 5px 14px;
             border: 1px solid rgba(243, 201, 105, 0.5); border-radius: 999px;
             font-size: 13px; color: var(--gold); letter-spacing: 1px;
         }
-        .hero-title { margin: 0; font-family: var(--serif); font-size: clamp(40px, 7vw, 64px); font-weight: 700; letter-spacing: 10px; line-height: 1.2; }
+        .hero-title { margin: 0; font-family: var(--serif); font-size: clamp(34px, 5.5vw, 52px); font-weight: 700; letter-spacing: 8px; line-height: 1.2; }
+
+        /* 작은 선 아이콘 (이모지 대신, 글자 색을 그대로 따른다) */
+        .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .ic-fill { fill: currentColor; stroke: none; }
         .hero-sub { margin: 12px 0 0; font-size: clamp(16px, 2.2vw, 19px); color: rgba(255, 255, 255, 0.85); }
         .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
         .hero-btn {
@@ -161,12 +166,14 @@
 
         .group { margin-bottom: 28px; }
         .group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-        .group-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 17px; color: var(--green); }
+        .group-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; color: var(--green); }
+        .group-title::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: var(--green); opacity: 0.7; }
         .group-title .count { background: var(--green-soft); color: var(--green); }
         .group-tools { display: flex; align-items: center; gap: 10px; font-size: 13px; }
         .group-tools label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--muted); }
         .group-tools input, .doc-checkbox { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--green); }
         .btn-playlist-play {
+            display: inline-flex; align-items: center; gap: 6px;
             background: var(--green); color: #fff; border: none;
             padding: 8px 14px; border-radius: 999px;
             font-size: 13px; font-weight: 700; cursor: pointer;
@@ -195,14 +202,23 @@
             transition: background 0.2s;
         }
         .btn-view:hover { background: var(--navy-deep); }
+        .btn-playlist-play .ic, .btn-view .ic { width: 12px; height: 12px; }
         .icon-btn {
             flex: none; width: 40px; border: none; border-radius: 9px;
-            background: var(--navy-soft); font-size: 16px; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: var(--navy-soft); color: var(--navy); cursor: pointer;
             transition: background 0.2s;
         }
         .icon-btn:hover, .icon-btn.open { background: #dce6f0; }
         .icon-btn.open { box-shadow: inset 0 0 0 2px var(--navy); }
-        .dl-menu { display: flex; flex-direction: column; gap: 6px; margin-top: -6px; padding: 8px; background: var(--navy-soft); border-radius: 10px; }
+        /* 📥 메뉴: 카드 아래로 떠서 열린다 (옆 카드 줄이 밀리지 않게) */
+        .dl-menu {
+            position: absolute; left: 12px; right: 12px; top: calc(100% - 8px); z-index: 5;
+            display: flex; flex-direction: column; gap: 6px; padding: 8px;
+            background: var(--navy-soft); border: 1px solid #d3dfeb; border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(31, 58, 95, 0.18);
+        }
+        .doc-card.menu-open { z-index: 10; }
         .dl-menu[hidden] { display: none; }
         .dl-item {
             display: flex; align-items: center; gap: 8px;
@@ -234,7 +250,8 @@
             .subject-btn { width: auto; flex: none; white-space: nowrap; padding: 9px 14px; font-size: 14px; }
             .subject-btn .count { margin-left: 4px; }
             .section { padding: 44px 0; }
-            .hero-inner { padding: 52px 20px 56px; }
+            .hero-inner { padding: 44px 20px 48px; }
+            .hero-stats { margin-top: 30px; }
         }
 
         /* ── 바로가기 ── */
@@ -249,10 +266,18 @@
             transition: transform 0.15s, box-shadow 0.2s;
         }
         .link-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-        .link-icon { font-size: 28px; }
+        /* 바로가기 표시: 이모지 대신 작은 네모 안에 한자 한 글자 */
+        .link-mark {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; border-radius: 9px;
+            background: rgba(60, 45, 20, 0.06);
+            background: color-mix(in srgb, var(--accent) 12%, transparent);
+            color: var(--accent); font-family: var(--serif); font-size: 17px; font-weight: 700;
+        }
         .link-title { font-size: 17px; font-weight: 700; }
         .link-host { font-size: 13px; color: var(--muted); }
-        .link-go { margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--accent); }
+        .link-go { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--accent); }
+        .link-go .ic { width: 14px; height: 14px; }
         .accent-navy { --accent: var(--navy); }
         .accent-green { --accent: var(--green); }
         .accent-red { --accent: var(--red); }
@@ -392,8 +417,8 @@
                 <h1 class="hero-title">誦書律唱</h1>
                 <p class="hero-sub">글을 소리로 읽고, 들으며 익히는 공부방</p>
                 <div class="hero-actions">
-                    <a class="hero-btn primary" href="#library">📚 공부 자료 보기</a>
-                    <a class="hero-btn ghost" href="https://cafe.daum.net/kangchang" target="_blank">☕ 카페 바로가기</a>
+                    <a class="hero-btn primary" href="#library">공부 자료 보기 <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+                    <a class="hero-btn ghost" href="https://cafe.daum.net/kangchang" target="_blank">카페 바로가기 <svg class="ic" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
                 </div>
                 <div class="hero-stats">
                     <div><div class="stat-num" id="statSubjects">–</div><div class="stat-label">과목</div></div>
@@ -425,29 +450,29 @@
                 </div>
                 <div class="link-grid">
                     <a href="https://cskim120.pythonanywhere.com/" target="_blank" class="link-card accent-navy">
-                        <span class="link-icon">🔮</span>
+                        <span class="link-mark">紫</span>
                         <span class="link-title">자미두수 명반 &amp; 心易(심역)</span>
                         <span class="link-host">cskim120.pythonanywhere.com</span>
-                        <span class="link-go">바로가기 →</span>
+                        <span class="link-go">바로가기 <svg class="ic" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
                     </a>
                     <a href="https://tajanx.pythonanywhere.com/" target="_blank" class="link-card accent-green">
-                        <span class="link-icon">📜</span>
+                        <span class="link-mark">易</span>
                         <span class="link-title">선천 역서(先天 易數)</span>
                         <span class="link-host">tajanx.pythonanywhere.com</span>
-                        <span class="link-go">바로가기 →</span>
+                        <span class="link-go">바로가기 <svg class="ic" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
                     </a>
                     <a href="https://cafe.daum.net/kangchang" target="_blank" class="link-card accent-red">
-                        <span class="link-icon">☕</span>
+                        <span class="link-mark">會</span>
                         <span class="link-title">강철의 心易 자미두수 카페</span>
                         <span class="link-host">cafe.daum.net/kangchang</span>
-                        <span class="link-go">바로가기 →</span>
+                        <span class="link-go">바로가기 <svg class="ic" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
                     </a>
                 </div>
 
                 <!-- 사용자 인증 코드 -->
                 <div class="auth-band" id="auth">
                     <div class="auth-text">
-                        <strong>🔑 이달의 사용자 인증 코드</strong>
+                        <strong>이달의 사용자 인증 코드</strong>
                         <span>매달 1일에 새 코드로 바뀝니다.</span>
                     </div>
                     <div class="auth-right">
@@ -498,6 +523,15 @@
         let currentPlaylistIndex = 0;
         let treeData = {};
         let sortedCategories = [];
+
+        // 작은 선 아이콘 (이모지 대신 쓴다)
+        const svgIcon = (body, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
+        const ICONS = {
+            play: svgIcon('<path d="M7 4.5v15l12-7.5z"/>', 'ic ic-fill'),
+            download: svgIcon('<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/>'),
+            link: svgIcon('<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>'),
+            copy: svgIcon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>'),
+        };
 
         function initMonthlyAuthCode() {
             try {
@@ -664,18 +698,18 @@
 
             let html = `
                 <div class="panel-head">
-                    <h3 class="panel-title">📚 ${escapeHtml(cat)}</h3>
+                    <h3 class="panel-title">${escapeHtml(cat)}</h3>
                     <span class="panel-meta">${metaParts.join(' · ')}</span>
                 </div>
             `;
 
             if (content._files.length > 0) {
                 // 한글 이름은 모두 '_'로 바뀌어 겹칠 수 있으므로 순번으로 id 를 만든다
-                const label = sortedSubcats.length > 0 ? '📄 기본 문서' : '📄 전체 문서';
+                const label = sortedSubcats.length > 0 ? '기본 문서' : '전체 문서';
                 html += renderGroup(label, content._files, `cat_${catIndex}`);
             }
             sortedSubcats.forEach((subcat, subIndex) => {
-                html += renderGroup(`📁 ${escapeHtml(subcat)}`, content._subcats[subcat], `sub_${catIndex}_${subIndex}`);
+                html += renderGroup(escapeHtml(subcat), content._subcats[subcat], `sub_${catIndex}_${subIndex}`);
             });
 
             document.getElementById('app').innerHTML = html;
@@ -693,7 +727,7 @@
                         <h4 class="group-title">${titleHtml} <span class="count">${docs.length}</span></h4>
                         <div class="group-tools">
                             <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
-                            <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">▶ 선택 연속 재생</button>
+                            <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">${ICONS.play} 선택 연속 재생</button>
                         </div>
                     </div>
                     <div class="doc-grid" id="${folderId}">
@@ -711,16 +745,16 @@
             const shareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
             const actionsHtml = doc.audio_url ? `
                 <div class="doc-actions">
-                    <button class="btn-view" onclick="openViewerById(${id})">▶ 듣기</button>
-                    <button class="icon-btn" title="MP3 내려받기 · 주소 복사" aria-label="MP3 내려받기 · 주소 복사" aria-expanded="false" onclick="toggleDownloadMenu(${id}, this)">📥</button>
-                    <button class="icon-btn" title="공유 링크 복사" aria-label="공유 링크 복사" onclick="copyAudioLink('link-${id}')">🔗</button>
+                    <button class="btn-view" onclick="openViewerById(${id})">${ICONS.play} 듣기</button>
+                    <button class="icon-btn" title="MP3 내려받기 · 주소 복사" aria-label="MP3 내려받기 · 주소 복사" aria-expanded="false" onclick="toggleDownloadMenu(${id}, this)">${ICONS.download}</button>
+                    <button class="icon-btn" title="공유 링크 복사" aria-label="공유 링크 복사" onclick="copyAudioLink('link-${id}')">${ICONS.link}</button>
                 </div>
                 <div class="dl-menu" id="dl-${id}" hidden>
-                    <button class="dl-item" onclick="downloadAudioById(${id}); closeDownloadMenus()">📥 MP3 내려받기</button>
-                    <button class="dl-item" onclick="copyMp3Url(${id}); closeDownloadMenus()">📋 MP3 주소 복사</button>
+                    <button class="dl-item" onclick="downloadAudioById(${id}); closeDownloadMenus()">${ICONS.download} MP3 내려받기</button>
+                    <button class="dl-item" onclick="copyMp3Url(${id}); closeDownloadMenus()">${ICONS.copy} MP3 주소 복사</button>
                 </div>
                 <input type="text" id="link-${id}" class="link-input" value="${escapeHtml(shareUrl)}" readonly tabindex="-1" aria-hidden="true">
-            ` : `<div class="no-audio">⚠️ 연결된 음성 파일이 없습니다</div>`;
+            ` : `<div class="no-audio">연결된 음성 파일이 없습니다</div>`;
 
             return `
                 <div class="doc-card">
@@ -749,12 +783,14 @@
             const willOpen = menu.hidden;
             closeDownloadMenus();
             menu.hidden = !willOpen;
+            menu.closest('.doc-card').classList.toggle('menu-open', willOpen);
             button.setAttribute('aria-expanded', String(willOpen));
             button.classList.toggle('open', willOpen);
         }
 
         function closeDownloadMenus() {
             document.querySelectorAll('.dl-menu').forEach(m => m.hidden = true);
+            document.querySelectorAll('.doc-card.menu-open').forEach(c => c.classList.remove('menu-open'));
             document.querySelectorAll('.icon-btn.open').forEach(b => {
                 b.classList.remove('open');
                 b.setAttribute('aria-expanded', 'false');
