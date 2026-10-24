@@ -200,7 +200,16 @@
             background: var(--navy-soft); font-size: 16px; cursor: pointer;
             transition: background 0.2s;
         }
-        .icon-btn:hover { background: #dce6f0; }
+        .icon-btn:hover, .icon-btn.open { background: #dce6f0; }
+        .icon-btn.open { box-shadow: inset 0 0 0 2px var(--navy); }
+        .dl-menu { display: flex; flex-direction: column; gap: 6px; margin-top: -6px; padding: 8px; background: var(--navy-soft); border-radius: 10px; }
+        .dl-menu[hidden] { display: none; }
+        .dl-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 12px; border: none; border-radius: 8px;
+            background: #fff; color: var(--navy); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer;
+        }
+        .dl-item:hover { background: #f4f7fb; }
         /* 링크 복사용 칸: 화면에는 보이지 않지만 복사할 때 쓴다 */
         .link-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         .no-audio { margin-top: auto; font-size: 13px; color: var(--red); background: var(--red-soft); padding: 8px; border-radius: 9px; text-align: center; }
@@ -666,8 +675,12 @@
             const actionsHtml = doc.audio_url ? `
                 <div class="doc-actions">
                     <button class="btn-view" onclick="openViewerById(${id})">▶ 듣기</button>
-                    <button class="icon-btn" title="MP3 내려받기" aria-label="MP3 내려받기" onclick="downloadAudioById(${id})">📥</button>
+                    <button class="icon-btn" title="MP3 내려받기 · 주소 복사" aria-label="MP3 내려받기 · 주소 복사" aria-expanded="false" onclick="toggleDownloadMenu(${id}, this)">📥</button>
                     <button class="icon-btn" title="공유 링크 복사" aria-label="공유 링크 복사" onclick="copyAudioLink('link-${id}')">🔗</button>
+                </div>
+                <div class="dl-menu" id="dl-${id}" hidden>
+                    <button class="dl-item" onclick="downloadAudioById(${id}); closeDownloadMenus()">📥 MP3 내려받기</button>
+                    <button class="dl-item" onclick="copyMp3Url(${id}); closeDownloadMenus()">📋 MP3 주소 복사</button>
                 </div>
                 <input type="text" id="link-${id}" class="link-input" value="${escapeHtml(shareUrl)}" readonly tabindex="-1" aria-hidden="true">
             ` : `<div class="no-audio">⚠️ 연결된 음성 파일이 없습니다</div>`;
@@ -691,6 +704,55 @@
         function downloadAudioById(id) {
             const doc = allDocuments[id];
             if (doc && doc.audio_url) downloadAudioFile(doc.audio_url, `${doc.title}.mp3`);
+        }
+
+        // 📥 버튼: 'MP3 내려받기'와 'MP3 주소 복사' 두 가지를 고르는 작은 메뉴를 열고 닫는다
+        function toggleDownloadMenu(id, button) {
+            const menu = document.getElementById(`dl-${id}`);
+            const willOpen = menu.hidden;
+            closeDownloadMenus();
+            menu.hidden = !willOpen;
+            button.setAttribute('aria-expanded', String(willOpen));
+            button.classList.toggle('open', willOpen);
+        }
+
+        function closeDownloadMenus() {
+            document.querySelectorAll('.dl-menu').forEach(m => m.hidden = true);
+            document.querySelectorAll('.icon-btn.open').forEach(b => {
+                b.classList.remove('open');
+                b.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        // 메뉴 바깥을 누르면 닫는다
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dl-menu') && !e.target.closest('.icon-btn')) closeDownloadMenus();
+        });
+
+        function copyMp3Url(id) {
+            const doc = allDocuments[id];
+            if (!doc || !doc.audio_url) return;
+            const url = doc.audio_url;
+            const done = () => alert("MP3 주소가 복사되었습니다!\n" + url);
+            const fallback = () => {
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                textarea.style.position = 'fixed';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    done();
+                } catch (err) {
+                    prompt("아래 주소를 길게 눌러 복사해 주세요.", url);
+                }
+                document.body.removeChild(textarea);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done).catch(fallback);
+            } else {
+                fallback();
+            }
         }
 
         function toggleSelectAll(masterCheckbox, folderId) {
