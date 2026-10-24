@@ -4,26 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>정밀 자막 동기화 재생</title>
+    <meta name="theme-color" content="#1c1d21">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; background: #121212; color: #fff; display: flex; flex-direction: column; align-items: center; height: 100vh; }
+        /* index.html 의 자막 재생 화면과 같은 모양 */
+        :root { --gold: #f3c969; --serif: "Noto Serif KR", serif; --sans: "Noto Sans KR", -apple-system, "Malgun Gothic", sans-serif; }
+        * { box-sizing: border-box; }
+        body { font-family: var(--sans); margin: 0; padding: 0; background: #111214; color: #fff; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         /* 넓은 화면에서도 휴대폰 화면 크기의 카드처럼 가운데에 보이게 한다 */
-        .top-player { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px; background: #1f1f1f; padding: 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .lyrics-container { width: 100%; max-width: 560px; box-sizing: border-box; }
-        @media (min-width: 600px) {
-            body { background: #0a0a0a; }
-            .top-player { border-radius: 0 0 12px 12px; }
-            .lyrics-container { background: #121212; }
-        }
-        audio { width: 100%; }
-        .back-btn { color: #90caf9; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block; margin-bottom: 8px; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; }
-        .lyrics-container { margin-top: 130px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
-        .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
-        .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
+        .top-player { flex: none; width: 100%; max-width: 640px; margin: 0 auto; padding: 12px 16px 14px; padding-top: max(12px, env(safe-area-inset-top)); background: #1c1d21; border-bottom: 1px solid #2a2b30; display: flex; flex-direction: column; gap: 10px; }
+        @media (min-width: 660px) { .top-player { border-radius: 0 0 16px 16px; border: 1px solid #2a2b30; border-top: none; } }
+        audio { width: 100%; height: 40px; }
+        .back-btn { align-self: flex-start; color: #a9c8ef; text-decoration: none; font-size: 14px; font-weight: 700; background: none; border: none; padding: 4px 0; cursor: pointer; font-family: inherit; }
+        .viewer-title { font-family: var(--serif); font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lyrics-container { flex: 1; overflow-y: auto; width: 100%; max-width: 640px; margin: 0 auto; padding: 30px 20px 50vh; text-align: center; line-height: 2; font-size: 17px; color: #6f727a; }
+        .lyric-line { color: #6f727a; transition: all 0.25s ease; margin: 14px 0; padding: 8px 14px; border-radius: 10px; }
+        .lyric-line.active { color: var(--gold); font-size: 20px; font-weight: 700; background: rgba(243, 201, 105, 0.12); transform: scale(1.02); }
     </style>
 </head>
 <body>
     <div class="top-player">
-        <a class="back-btn" id="backBtn" href="index.html">⬅ 목록으로 돌아가기</a>
+        <a class="back-btn" id="backBtn" href="index.html">‹ 목록으로</a>
+        <div class="viewer-title" id="viewerTitle"></div>
         <audio id="audioPlayer" controls></audio>
     </div>
     <div class="lyrics-container" id="lyricsContainer">로딩 중...</div>
@@ -41,7 +45,7 @@
         const fromBlog = urlParams.get('from') === 'blog' || /blog\.naver\.com/.test(document.referrer);
         if (fromBlog) {
             const back = document.getElementById('backBtn');
-            back.textContent = '⬅ 블로그로 돌아가기';
+            back.textContent = '‹ 블로그로 돌아가기';
             back.addEventListener('click', (e) => {
                 e.preventDefault();
                 window.close();
@@ -58,6 +62,9 @@
                 document.getElementById('lyricsContainer').textContent = '데이터를 불러오지 못했습니다.';
                 return;
             }
+
+            document.getElementById('viewerTitle').textContent = doc.title || '';
+            if (doc.title) document.title = doc.title + ' · 誦書律唱';
 
             // 오디오 설정
             const audio = document.getElementById('audioPlayer');

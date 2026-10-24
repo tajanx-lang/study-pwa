@@ -2,152 +2,341 @@
 <html lang="ko">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1f3a5f">
     <title>誦書律唱(송서율창) 클라우드</title>
+    <link rel="manifest" href="manifest.json">
+    <!-- 글꼴: 제목은 명조체(Noto Serif KR), 본문은 고딕체(Noto Sans KR) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- CryptoJS MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 15px; background: #f2f4f7; margin: 0; -webkit-text-size-adjust: 100%; }
-        h2 { color: #0b3c5d; text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
-        details { background: white; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
-        summary { padding: 14px 16px; font-weight: bold; cursor: pointer; outline: none; display: flex; align-items: center; user-select: none; -webkit-user-select: none; }
-        .cat-summary { font-size: 17px; color: #0b3c5d; background: #eef3f8; border-bottom: 1px solid #d0e1fd; }
-        .subcat-summary { font-size: 15px; color: #1e6f3d; background: #f4f8f4; margin: 6px 10px; border-radius: 8px; border: 1px solid #c8e6c9; }
-        
-        /* 폴더 내부 상단 컨트롤 바 (전체선택 및 연속재생 버튼) */
-        .folder-controls { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; font-size: 13px; font-weight: bold; }
-        .folder-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #333; }
-        .btn-playlist-play { background: #2e7d32; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        .btn-playlist-play:hover { background: #1b5e20; }
-
-        .doc-summary { font-size: 14px; color: #333; background: #fafafa; margin: 6px 15px; border-radius: 8px; border: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; padding-right: 15px; }
-        .doc-summary summary { flex: 1; padding: 12px 16px; }
-        .doc-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #2e7d32; }
-
-        .doc-content { padding: 12px; background: #fff; border-top: 1px solid #eee; }
-        .audio-label { font-size: 12px; color: #555; margin: 6px 0 2px 2px; font-weight: bold; }
-        .btn-view { display: block; text-align: center; background: #2e7d32; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; cursor: pointer; }
-        .btn-download { display: block; text-align: center; background: #007aff; color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 12px; cursor: pointer; margin-bottom: 8px; }
-        
-        /* 💡 GitHub 링크 복사 영역 스타일 추가 */
-        .link-box { display: flex; margin-top: 6px; gap: 4px; }
-        .link-input { flex: 1; padding: 6px 8px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; color: #333; }
-        .btn-copy-link { background: #ff9800; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; white-space: nowrap; }
-        .btn-copy-link:active { background: #e68900; }
-
-        .no-audio { font-size: 12px; color: #d32f2f; background: #ffebee; padding: 8px; border-radius: 6px; text-align: center; }
-        .loading { text-align: center; color: #777; margin-top: 40px; font-size: 15px; }
-
-        /* 하단 외부 링크 버튼 스타일 */
-        .link-buttons-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 35px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+        /* 색과 모양을 한곳에서 정한다 (한지 바탕 + 먹색 글씨 + 남색·초록 포인트) */
+        :root {
+            --bg: #f4efe4;
+            --paper: #fffdf8;
+            --ink: #2b2925;
+            --muted: #7b7366;
+            --line: #e7dfcf;
+            --navy: #1f3a5f;
+            --navy-soft: #eaf0f6;
+            --green: #2f6b4f;
+            --green-soft: #ebf4ee;
+            --red: #a8322a;
+            --red-soft: #fbeceb;
+            --gold: #f3c969;
+            --radius: 14px;
+            --shadow: 0 1px 2px rgba(60, 45, 20, 0.06), 0 4px 14px rgba(60, 45, 20, 0.06);
+            --serif: "Noto Serif KR", "Nanum Myeongjo", serif;
+            --sans: "Noto Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
         }
-        .external-btn {
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: background 0.2s, transform 0.1s;
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--sans);
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button, input { font-family: inherit; }
+
+        /* 넓은 화면에서도 휴대폰 화면 폭으로 가운데에 놓는다 */
+        #main-view { max-width: 640px; margin: 0 auto; padding: 0 16px 40px; }
+
+        /* ── 머리말 ── */
+        .hero {
             text-align: center;
-            flex: 1;
-            min-width: 180px;
-            max-width: 250px;
+            padding: 36px 12px 26px;
         }
-        .external-btn:hover {
-            transform: translateY(-2px);
-        }
-        .btn-saju { background-color: #0b3c5d; }
-        .btn-saju:hover { background-color: #124e78; }
-        .btn-yeok { background-color: #1e6f3d; }
-        .btn-yeok:hover { background-color: #278c4d; }
-        .btn-cafe { background-color: #b71c1c; }
-        .btn-cafe:hover { background-color: #c62828; }
-
-        /* 사용자 인증 코드 박스 스타일 */
-        .auth-code-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            padding: 12px 20px;
+        .hero-seal {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 44px; height: 44px; margin-bottom: 12px;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin: 0 auto 35px auto;
-            max-width: 420px;
-            gap: 12px;
-            border: 1px solid #d0e1fd;
+            background: var(--red); color: #fff;
+            font-family: var(--serif); font-size: 24px; font-weight: 700;
+            box-shadow: 0 3px 10px rgba(168, 50, 42, 0.25);
         }
-        .auth-btn-label {
-            background-color: #455a64;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
+        .hero-title {
+            margin: 0;
+            font-family: var(--serif);
+            font-size: 34px; font-weight: 700; letter-spacing: 6px;
+            color: var(--navy);
+        }
+        .hero-sub { margin: 4px 0 0; font-size: 15px; font-weight: 500; color: var(--navy); letter-spacing: 1px; }
+        .hero-desc { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+
+        .section-label {
+            margin: 28px 4px 10px;
+            font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 1px;
+        }
+
+        /* ── 접고 펴는 목록 공통 ── */
+        details > summary { list-style: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .chev {
+            flex: none; width: 8px; height: 8px; margin-left: 10px;
+            border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+            transform: rotate(-45deg); opacity: 0.5; transition: transform 0.2s;
+        }
+        details[open] > summary .chev { transform: rotate(45deg); }
+        .count {
+            flex: none; margin-left: auto;
+            font-size: 12px; font-weight: 700;
+            padding: 2px 9px; border-radius: 999px;
+        }
+
+        /* 과목(큰 분류) */
+        .cat {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .cat-summary {
+            display: flex; align-items: center; gap: 10px;
+            padding: 16px 18px;
+            font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--navy);
+        }
+        .cat-summary .count { background: var(--navy-soft); color: var(--navy); font-family: var(--sans); }
+        .cat[open] > .cat-summary { border-bottom: 1px solid var(--line); background: linear-gradient(#fffdf8, #fbf7ee); }
+        .cat-body { padding: 10px 12px 12px; }
+
+        /* 분류(작은 분류) */
+        .subcat {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fffefb;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        .subcat-summary {
+            display: flex; align-items: center; gap: 8px;
+            padding: 13px 14px;
+            font-size: 15px; font-weight: 700; color: var(--green);
+        }
+        .subcat-summary .count { background: var(--green-soft); color: var(--green); }
+        .subcat[open] > .subcat-summary { border-bottom: 1px dashed var(--line); }
+        .subcat-body { padding: 6px 8px 8px; }
+
+        /* 폴더 안 맨 위: 전체선택 · 연속 재생 */
+        .folder-controls {
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            padding: 8px 6px 10px;
             font-size: 13px;
-            font-weight: bold;
-            cursor: default;
         }
-        .auth-code { font-size: 16px; font-weight: bold; color: #d32f2f; background: #ffebee; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; }
-        .copy-btn { background: #0b3c5d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: background 0.2s; }
-        .copy-btn:hover { background: #124e78; }
+        .folder-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--muted); font-weight: 500; }
+        .folder-controls input, .doc-checkbox { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--green); }
+        .btn-playlist-play {
+            background: var(--green); color: #fff; border: none;
+            padding: 8px 14px; border-radius: 999px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-playlist-play:hover { background: #255a42; }
+        .btn-playlist-play:active { transform: scale(0.97); }
 
-        /* 전체 화면 뷰어 스타일 */
-        #viewer-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #121212; color: #fff; flex-direction: column; z-index: 1000; }
-        .top-player { position: fixed; top: 0; left: 0; width: 100%; background: #1f1f1f; padding: 12px 15px; box-sizing: border-box; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 8px; }
-        .top-player audio { width: 100%; }
-        .player-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .back-btn { color: #90caf9; text-decoration: none; font-weight: bold; cursor: pointer; }
-        .playlist-status { color: #ffeb3b; font-weight: bold; }
-        
-        .repeat-label { color: #fff; font-size: 13px; display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
-        .repeat-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #2e7d32; }
+        /* 문서 한 개 */
+        .doc {
+            display: flex; align-items: flex-start;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            margin: 6px 0;
+            transition: border-color 0.2s;
+        }
+        .doc:hover { border-color: #d8cbb2; }
+        .doc-details { flex: 1; min-width: 0; }
+        .doc-summary {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 6px 12px 14px;
+            font-size: 15px; color: var(--ink);
+        }
+        .doc-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+        .doc-badge { flex: none; font-size: 12px; opacity: 0.7; }
+        .doc-details[open] > .doc-summary { font-weight: 700; color: var(--navy); }
+        .doc-check { flex: none; display: flex; align-items: center; padding: 13px 14px 13px 8px; cursor: pointer; }
 
-        .lyrics-container { margin-top: 150px; padding: 25px 20px; overflow-y: auto; flex: 1; text-align: center; line-height: 2.2; font-size: 17px; }
-        .lyric-line { color: #777; transition: all 0.2s ease; margin: 20px 0; padding: 8px 12px; border-radius: 8px; }
-        .lyric-line.active { color: #ffeb3b; font-size: 20px; font-weight: bold; background: rgba(255, 235, 59, 0.15); transform: scale(1.03); }
+        .doc-content { padding: 4px 14px 14px; }
+        .audio-label { font-size: 12px; color: var(--muted); margin: 0 0 8px; overflow-wrap: anywhere; }
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; padding: 11px 12px;
+            border-radius: 10px; border: none;
+            font-size: 14px; font-weight: 700; text-decoration: none;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-view { background: var(--navy); color: #fff; margin-bottom: 8px; }
+        .btn-view:hover { background: #18304f; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-light { background: var(--navy-soft); color: var(--navy); font-size: 13px; padding: 9px 10px; white-space: nowrap; }
+        .btn-light:hover { background: #dce6f0; }
+        .link-input {
+            width: 100%; margin-top: 8px; padding: 7px 10px;
+            font-size: 11px; color: var(--muted);
+            border: 1px solid var(--line); border-radius: 8px; background: #faf7f0;
+        }
+        .no-audio { font-size: 13px; color: var(--red); background: var(--red-soft); padding: 10px; border-radius: 10px; text-align: center; }
+
+        .loading, .empty, .error { text-align: center; padding: 48px 12px; color: var(--muted); font-size: 15px; }
+        .error { color: var(--red); }
+        .spinner {
+            width: 28px; height: 28px; margin: 0 auto 12px;
+            border: 3px solid var(--line); border-top-color: var(--navy); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── 바깥 사이트 바로가기 ── */
+        .link-buttons-container { display: grid; gap: 10px; }
+        .external-btn {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px;
+            background: var(--paper);
+            border: 1px solid var(--line); border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            color: var(--ink); text-decoration: none;
+            font-size: 14px; font-weight: 700;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+        .external-btn:hover { transform: translateY(-1px); }
+        .external-btn .ext-icon { font-size: 20px; }
+        .external-btn .ext-arrow { margin-left: auto; color: var(--muted); font-weight: 400; }
+        .btn-saju { --accent: var(--navy); }
+        .btn-yeok { --accent: var(--green); }
+        .btn-cafe { --accent: var(--red); }
+
+        /* ── 사용자 인증 코드 ── */
+        .auth-code-container {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 14px 16px;
+            background: var(--paper);
+            border: 1px dashed #d3c6ad;
+            border-radius: 12px;
+        }
+        .auth-btn-label { font-size: 13px; font-weight: 700; color: var(--muted); }
+        .auth-right { display: flex; align-items: center; gap: 8px; }
+        .auth-code {
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 17px; font-weight: 700; letter-spacing: 2px;
+            color: var(--red); background: var(--red-soft);
+            padding: 5px 12px; border-radius: 8px;
+        }
+        .copy-btn {
+            background: var(--navy); color: #fff; border: none;
+            padding: 8px 12px; border-radius: 8px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+        }
+        .copy-btn:hover { background: #18304f; }
+
+        .footer-note { text-align: center; margin-top: 28px; font-size: 12px; color: #a59c8c; }
+
+        /* ── 전체 화면 자막 재생 화면 ── */
+        #viewer-container {
+            display: none;
+            position: fixed; inset: 0;
+            height: 100vh; height: 100dvh;
+            background: #111214; color: #fff;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        .top-player {
+            flex: none;
+            width: 100%; max-width: 640px; margin: 0 auto;
+            padding: 12px 16px 14px;
+            padding-top: max(12px, env(safe-area-inset-top));
+            background: #1c1d21;
+            border-bottom: 1px solid #2a2b30;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        @media (min-width: 660px) { .top-player { border-radius: 0 0 16px 16px; border: 1px solid #2a2b30; border-top: none; } }
+        .player-info-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; }
+        .back-btn {
+            color: #a9c8ef; text-decoration: none; font-weight: 700; cursor: pointer;
+            background: none; border: none; padding: 4px 0; font-size: 14px;
+        }
+        .repeat-label { color: #ddd; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+        .repeat-label input { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--gold); }
+        .now-playing { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+        .playlist-status {
+            flex: none; font-size: 12px; font-weight: 700; color: #111;
+            background: var(--gold); padding: 2px 8px; border-radius: 999px;
+        }
+        .viewer-title {
+            min-width: 0; font-family: var(--serif); font-size: 17px; font-weight: 700; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .top-player audio { width: 100%; height: 40px; }
+
+        .lyrics-container {
+            flex: 1; overflow-y: auto;
+            width: 100%; max-width: 640px; margin: 0 auto;
+            padding: 30px 20px 50vh;
+            text-align: center; line-height: 2; font-size: 17px;
+        }
+        .lyric-line { color: #6f727a; transition: all 0.25s ease; margin: 14px 0; padding: 8px 14px; border-radius: 10px; }
+        .lyric-line.active {
+            color: var(--gold); font-size: 20px; font-weight: 700;
+            background: rgba(243, 201, 105, 0.12);
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
     <div id="main-view">
-        <h2>📜 誦書律唱(송서율창) 클라우드</h2>
-        <div class="subtitle">과목 ➔ 분류 ➔ 문서 아코디언 트리 시스템 (순서 정렬 적용)</div>
-        <div id="app" class="loading">데이터를 불러오는 중입니다...</div>
+        <header class="hero">
+            <div class="hero-seal">誦</div>
+            <h1 class="hero-title">誦書律唱</h1>
+            <p class="hero-sub">송서율창 클라우드</p>
+            <p class="hero-desc">과목을 펼쳐 문서를 고르고, 자막과 함께 들어 보세요.</p>
+        </header>
+
+        <div id="app" class="loading"><div class="spinner"></div>데이터를 불러오는 중입니다...</div>
 
         <!-- 외부 링크 버튼 영역 -->
+        <div class="section-label">바로가기</div>
         <div class="link-buttons-container">
-            <a href="https://cskim120.pythonanywhere.com/" target="_blank" class="external-btn btn-saju">🔮 자미두수 명반&心易(심역)</a>
-            <a href="https://tajanx.pythonanywhere.com/" target="_blank" class="external-btn btn-yeok">📜 선천 역서(先天 易數)</a>
-            <a href="https://cafe.daum.net/kangchang" target="_blank" class="external-btn btn-cafe">☕ 강철의 心易 자미두수-사이트</a>
+            <a href="https://cskim120.pythonanywhere.com/" target="_blank" class="external-btn btn-saju"><span class="ext-icon">🔮</span>자미두수 명반 &amp; 心易(심역)<span class="ext-arrow">↗</span></a>
+            <a href="https://tajanx.pythonanywhere.com/" target="_blank" class="external-btn btn-yeok"><span class="ext-icon">📜</span>선천 역서(先天 易數)<span class="ext-arrow">↗</span></a>
+            <a href="https://cafe.daum.net/kangchang" target="_blank" class="external-btn btn-cafe"><span class="ext-icon">☕</span>강철의 心易 자미두수 카페<span class="ext-arrow">↗</span></a>
         </div>
 
         <!-- 사용자 인증 코드 버튼 및 출력 영역 -->
         <div class="auth-code-container">
-            <div class="auth-btn-label">사용자 인증 코드</div>
-            <span id="authCodeText" class="auth-code">로딩중...</span>
-            <button class="copy-btn" onclick="copyAuthCode()">📋 복사하기</button>
+            <div class="auth-btn-label">🔑 이달의 사용자 인증 코드</div>
+            <div class="auth-right">
+                <span id="authCodeText" class="auth-code">로딩중...</span>
+                <button class="copy-btn" onclick="copyAuthCode()">복사</button>
+            </div>
         </div>
+
+        <div class="footer-note">誦書律唱 · 송서율창</div>
     </div>
 
     <!-- 전체 화면 자막 동기화 뷰어 -->
     <div id="viewer-container">
         <div class="top-player">
             <div class="player-info-row">
-                <a class="back-btn" onclick="closeViewer()">⬅ 목록으로 돌아가기</a>
-                <span id="playlistStatus" class="playlist-status">재생 중: 1 / 1</span>
+                <button class="back-btn" onclick="closeViewer()">‹ 목록으로</button>
                 <label class="repeat-label">
                     <input type="checkbox" id="repeatCheckbox"> 🔁 반복재생
                 </label>
+            </div>
+            <div class="now-playing">
+                <span id="playlistStatus" class="playlist-status">1 / 1</span>
+                <span id="viewerTitle" class="viewer-title"></span>
             </div>
             <audio id="audioPlayer" controls></audio>
         </div>
@@ -157,7 +346,7 @@
     <script>
         const SUPABASE_URL = "https://vdiogfisdouzvtnpuvoc.supabase.co";
         const SUPABASE_KEY = "sb_publishable_fgXbc2B32uYh8lWgqtFSjA_IaP2-4AG";
-        
+
         let supabaseClient;
         let allDocuments = [];
         let currentPlaylist = [];
@@ -209,10 +398,10 @@
         function copyAudioLink(elementId) {
             const inputElement = document.getElementById(elementId);
             const fullUrl = inputElement.value;
-            
+
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(fullUrl).then(() => {
-                    alert("GitHub 실행 링크가 복사되었습니다!\n" + fullUrl);
+                    alert("공유 링크가 복사되었습니다!\n" + fullUrl);
                 }).catch(() => {
                     fallbackCopyLink(inputElement, fullUrl);
                 });
@@ -250,17 +439,18 @@
 
                 if (error) throw error;
                 if (!data || data.length === 0) {
-                    appDiv.innerHTML = '<div style="text-align:center; color:#777; margin-top:40px;">저장된 문서가 없습니다.</div>';
+                    appDiv.className = 'empty';
+                    appDiv.innerHTML = '저장된 문서가 없습니다.';
                     return;
                 }
 
                 allDocuments = data;
                 const treeData = {};
-                
+
                 data.forEach(row => {
                     const cat = row.category || "기타";
                     const sub = row.sub_category ? row.sub_category.trim() : "";
-                    
+
                     if (!treeData[cat]) {
                         treeData[cat] = { _files: [], _subcats: {} };
                     }
@@ -275,24 +465,19 @@
                     }
                 });
 
-                let html = '';
+                let html = '<div class="section-label" style="margin-top:0">공부 자료</div>';
                 const sortedCategories = Object.keys(treeData).sort(naturalSort);
 
                 sortedCategories.forEach((cat, catIndex) => {
                     const content = treeData[cat];
-                    html += `<details><summary class="cat-summary">📚 ${escapeHtml(cat)}</summary><div style="padding: 10px;">`;
-                    
+                    const total = content._files.length + Object.values(content._subcats).reduce((n, docs) => n + docs.length, 0);
+                    html += `<details class="cat"><summary class="cat-summary"><span>📚</span><span>${escapeHtml(cat)}</span><span class="count">${total}</span><span class="chev"></span></summary><div class="cat-body">`;
+
                     if (content._files.length > 0) {
                         content._files.sort((a, b) => naturalSort(a.title, b.title));
                         // 한글 이름은 모두 '_'로 바뀌어 겹칠 수 있으므로 순번으로 id 를 만든다
                         const folderId = `cat_${catIndex}`;
-                        html += `
-                            <div class="folder-controls">
-                                <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
-                                <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">▶ 선택한 문서 연속 재생</button>
-                            </div>
-                            <div id="${folderId}">
-                        `;
+                        html += renderFolderControls(folderId) + `<div id="${folderId}">`;
                         content._files.forEach(doc => {
                             html += renderDocBox(doc, folderId);
                         });
@@ -304,27 +489,22 @@
                         const docs = content._subcats[subcat];
                         docs.sort((a, b) => naturalSort(a.title, b.title));
                         const folderId = `sub_${catIndex}_${subIndex}`;
-                        
-                        html += `<details class="subcat-summary"><summary>📁 ${escapeHtml(subcat)}</summary>`;
-                        html += `
-                            <div class="folder-controls">
-                                <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
-                                <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">▶ 선택한 문서 연속 재생</button>
-                            </div>
-                            <div id="${folderId}" style="padding: 5px;">
-                        `;
+
+                        html += `<details class="subcat"><summary class="subcat-summary"><span>📁</span><span>${escapeHtml(subcat)}</span><span class="count">${docs.length}</span><span class="chev"></span></summary><div class="subcat-body">`;
+                        html += renderFolderControls(folderId) + `<div id="${folderId}">`;
                         docs.forEach(doc => {
                             html += renderDocBox(doc, folderId);
                         });
-                        html += `</div></details>`;
+                        html += `</div></div></details>`;
                     });
 
                     html += `</div></details>`;
                 });
 
+                appDiv.className = '';
                 appDiv.innerHTML = html;
 
-                // 💡 공유된 GitHub 링크(?title=문서이름)로 접속했을 경우 자동 실행
+                // 💡 공유된 링크(?title=문서이름)로 접속했을 경우 자동 실행
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetTitle = urlParams.get('title');
                 if (targetTitle) {
@@ -334,8 +514,18 @@
                 }
 
             } catch (err) {
-                appDiv.innerHTML = `<div style="text-align:center; color:#d32f2f; margin-top:40px;">데이터 로드 오류: ${escapeHtml(err.message)}</div>`;
+                appDiv.className = 'error';
+                appDiv.innerHTML = `데이터 로드 오류: ${escapeHtml(err.message)}`;
             }
+        }
+
+        function renderFolderControls(folderId) {
+            return `
+                <div class="folder-controls">
+                    <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
+                    <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">▶ 선택 연속 재생</button>
+                </div>
+            `;
         }
 
         // 문서 이름·분류에 < > " ' 같은 기호가 있어도 화면이 깨지지 않도록 글자로만 표시한다.
@@ -347,24 +537,27 @@
             const shareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
             let audioContentHtml = doc.audio_url ? `
                 <div class="audio-label">🎵 ${escapeHtml(audioName)}</div>
-                <a class="btn-view" onclick="openViewerById(${id})">📖 정밀 자막과 함께 듣기</a>
-                <a class="btn-download" onclick="downloadAudioById(${id})">📥 다운로드 (${escapeHtml(audioName)})</a>
-                
-                <div class="link-box">
-                    <input type="text" id="link-${id}" class="link-input" value="${escapeHtml(shareUrl)}" readonly>
-                    <button class="btn-copy-link" onclick="copyAudioLink('link-${id}')">📋 GitHub 실행 링크 복사</button>
+                <a class="btn btn-view" onclick="openViewerById(${id})">▶ 자막과 함께 듣기</a>
+                <div class="btn-row">
+                    <a class="btn btn-light" onclick="downloadAudioById(${id})">📥 내려받기</a>
+                    <button class="btn btn-light" onclick="copyAudioLink('link-${id}')">🔗 링크 복사</button>
                 </div>
+                <input type="text" id="link-${id}" class="link-input" value="${escapeHtml(shareUrl)}" readonly>
             ` : `<div class="no-audio">⚠️ 연결된 오디오 파일이 없습니다.</div>`;
 
             return `
-                <div class="doc-summary">
-                    <details style="flex:1; margin:0; background:transparent; box-shadow:none;">
-                        <summary style="padding:10px 12px;">📄 ${escapeHtml(doc.title)}</summary>
+                <div class="doc">
+                    <details class="doc-details">
+                        <summary class="doc-summary">
+                            <span class="doc-title">${escapeHtml(doc.title)}</span>
+                            ${doc.audio_url ? '<span class="doc-badge" title="음성 있음">🎵</span>' : ''}
+                            <span class="chev"></span>
+                        </summary>
                         <div class="doc-content">
                             ${audioContentHtml}
                         </div>
                     </details>
-                    <input type="checkbox" class="doc-checkbox ${folderId}" value="${id}">
+                    <label class="doc-check"><input type="checkbox" class="doc-checkbox ${folderId}" value="${id}"></label>
                 </div>
             `;
         }
@@ -430,13 +623,15 @@
             currentPlaylistIndex = index;
 
             const doc = currentPlaylist[index];
-            document.getElementById('playlistStatus').textContent = `재생 중: ${index + 1} / ${currentPlaylist.length} (${doc.title})`;
+            document.getElementById('playlistStatus').textContent = `${index + 1} / ${currentPlaylist.length}`;
+            document.getElementById('viewerTitle').textContent = doc.title;
 
             const audio = document.getElementById('audioPlayer');
             audio.src = doc.audio_url || '';
 
             const container = document.getElementById('lyricsContainer');
             container.innerHTML = '';
+            container.scrollTop = 0;
 
             const finalSentences = [];
             if (doc.content) {
