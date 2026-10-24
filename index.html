@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#1f3a5f">
+    <meta name="theme-color" content="#f4efe4">
     <title>誦書律唱(송서율창) 클라우드</title>
     <link rel="manifest" href="manifest.json">
     <!-- 글꼴: 제목은 명조체(Noto Serif KR), 본문은 고딕체(Noto Sans KR) -->
@@ -20,7 +20,7 @@
             --bg: #f4efe4;
             --paper: #fffdf8;
             --ink: #2b2925;
-            --muted: #7b7366;
+            --muted: #6e665a;
             --line: #e7dfcf;
             --navy: #1f3a5f;
             --navy-deep: #142840;
@@ -30,7 +30,7 @@
             --red: #a8322a;
             --red-soft: #fbeceb;
             --gold: #f3c969;
-            --radius: 14px;
+            --radius: 8px;
             --shadow: 0 1px 2px rgba(60, 45, 20, 0.06), 0 6px 18px rgba(60, 45, 20, 0.07);
             --serif: "Noto Serif KR", "Nanum Myeongjo", serif;
             --sans: "Noto Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -65,9 +65,9 @@
         .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .seal {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 34px; height: 34px; border-radius: 8px;
+            width: 34px; height: 34px; border-radius: 3px;
             background: var(--red); color: #fff;
-            font-family: var(--serif); font-size: 19px; font-weight: 700;
+            font-family: var(--serif); font-size: 19px; font-weight: 600;
         }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--navy); letter-spacing: 2px; }
         .brand-sub { font-size: 12px; color: var(--muted); margin-left: 2px; }
@@ -77,7 +77,7 @@
             font-size: 14px; font-weight: 500; color: var(--ink); text-decoration: none;
             transition: background 0.2s;
         }
-        .nav a:hover { background: var(--navy-soft); color: var(--navy); }
+        .nav a:hover { color: var(--red); }
         @media (max-width: 640px) {
             .brand-sub { display: none; }
             .nav a { padding: 6px 9px; font-size: 13px; }
@@ -87,148 +87,148 @@
         /* ── 첫 화면 큰 배너 ── */
         .hero {
             position: relative; overflow: hidden;
-            background:
-                radial-gradient(circle at 85% 20%, rgba(243, 201, 105, 0.22), transparent 45%),
-                radial-gradient(circle at 10% 90%, rgba(168, 50, 42, 0.25), transparent 40%),
-                linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 100%);
-            color: #fff;
+            /* 한지 한 장: 옅은 종이 결만 남기고 색은 빼서 조용하게 */
+            background-color: var(--bg);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.25 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            border-bottom: 1px solid var(--line);
+            color: var(--ink);
         }
         .hero::after {
             /* 오른쪽에 큰 한자를 옅게 깔아 분위기를 낸다 */
             content: "誦"; position: absolute; right: 4%; bottom: -40px;
             font-family: var(--serif); font-size: 200px; font-weight: 700; line-height: 1;
-            color: rgba(255, 255, 255, 0.035); pointer-events: none;
+            color: rgba(168, 50, 42, 0.05); pointer-events: none;
         }
         @media (max-width: 640px) { .hero::after { display: none; } }
         .hero-inner { position: relative; z-index: 1; padding: 60px 20px 64px; }
         .hero-kicker {
-            display: inline-block; margin-bottom: 18px; padding: 5px 14px;
-            border: 1px solid rgba(243, 201, 105, 0.5); border-radius: 999px;
-            font-size: 13px; color: var(--gold); letter-spacing: 1px;
+            display: inline-block; margin-bottom: 18px;
+            font-family: var(--serif); font-size: 14px; color: var(--red); letter-spacing: 0.2em;
         }
-        .hero-title { margin: 0; font-family: var(--serif); font-size: clamp(34px, 5.5vw, 52px); font-weight: 700; letter-spacing: 8px; line-height: 1.2; }
+        .hero-title { margin: 0; font-family: var(--serif); font-size: clamp(34px, 5.5vw, 52px); font-weight: 600; letter-spacing: 0.35em; line-height: 1.2; color: var(--navy); }
 
         /* 작은 선 아이콘 (이모지 대신, 글자 색을 그대로 따른다) */
         .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         .ic-fill { fill: currentColor; stroke: none; }
-        .hero-sub { margin: 12px 0 0; font-size: clamp(16px, 2.2vw, 19px); color: rgba(255, 255, 255, 0.85); }
+        .hero-sub { margin: 12px 0 0; font-size: clamp(16px, 2.2vw, 19px); color: var(--muted); }
         .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
         .hero-btn {
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 13px 22px; border-radius: 999px;
-            font-size: 15px; font-weight: 700; text-decoration: none;
-            transition: transform 0.15s, background 0.2s;
+            padding: 13px 22px; border-radius: 6px;
+            font-size: 15px; font-weight: 500; text-decoration: none;
+            border: 1px solid transparent;
+            transition: background 0.2s, color 0.2s;
         }
-        .hero-btn:hover { transform: translateY(-2px); }
-        .hero-btn.primary { background: var(--gold); color: var(--navy-deep); }
-        .hero-btn.ghost { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); }
-        .hero-stats { display: flex; gap: 28px; margin-top: 40px; }
-        .stat-num { font-family: var(--serif); font-size: 30px; font-weight: 700; color: var(--gold); line-height: 1; }
-        .stat-label { margin-top: 6px; font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+        .hero-btn.primary { background: var(--navy); color: #fffdf8; }
+        .hero-btn.primary:hover { background: var(--navy-deep); }
+        .hero-btn.ghost { background: transparent; color: var(--navy); border-color: rgba(31, 58, 95, 0.35); }
+        .hero-btn.ghost:hover { background: rgba(31, 58, 95, 0.06); }
+        /* 책 끝의 판권지처럼 한 줄로 */
+        .hero-colophon { margin: 28px 0 0; font-family: var(--serif); font-size: 15px; color: var(--muted); letter-spacing: 0.05em; }
 
         /* ── 구역 공통 ── */
         .section { padding: 64px 0; }
         .section-head { margin-bottom: 26px; }
-        .section-eyebrow { font-size: 13px; font-weight: 700; color: var(--red); letter-spacing: 2px; }
-        .section-title { margin: 6px 0 0; font-family: var(--serif); font-size: clamp(24px, 3.4vw, 30px); color: var(--navy); }
+        .section-eyebrow { font-family: var(--serif); font-size: 14px; font-weight: 600; color: var(--red); letter-spacing: 0.3em; }
+        .section-title { margin: 6px 0 0; font-family: var(--serif); font-size: clamp(24px, 3.4vw, 30px); font-weight: 600; letter-spacing: 0.04em; color: var(--navy); }
         .section-desc { margin: 6px 0 0; color: var(--muted); }
 
         /* ── 공부 자료: 왼쪽 과목 목록 + 오른쪽 문서 ── */
         .library { display: grid; grid-template-columns: 250px 1fr; gap: 24px; align-items: start; }
         .subject-nav {
             position: sticky; top: 80px;
-            background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
-            box-shadow: var(--shadow); padding: 8px;
+            border-right: 1px solid var(--line); padding: 4px 16px 4px 0;
         }
         .subject-btn {
             display: flex; align-items: center; gap: 10px; width: 100%;
-            padding: 11px 12px; border: none; border-radius: 10px; background: none;
+            padding: 11px 12px; border: none; border-radius: 4px; background: none;
             font-size: 15px; font-weight: 500; color: var(--ink); text-align: left; cursor: pointer;
             transition: background 0.15s;
         }
-        .subject-btn:hover { background: #f6f1e6; }
-        .subject-btn.active { background: var(--navy); color: #fff; font-weight: 700; }
+        .subject-btn:hover { background: rgba(60, 45, 20, 0.04); }
+        .subject-btn.active { color: var(--navy); font-weight: 700; box-shadow: inset 2px 0 0 var(--red); }
         .subject-btn .count { margin-left: auto; }
-        .subject-btn.active .count { background: rgba(255, 255, 255, 0.18); color: #fff; }
-        .count {
-            flex: none; font-size: 12px; font-weight: 700;
-            padding: 1px 9px; border-radius: 999px;
-            background: var(--navy-soft); color: var(--navy);
-        }
+        .count { flex: none; font-size: 13px; font-weight: 400; color: var(--muted); }
 
         .panel { min-width: 0; }
         .panel-head {
             display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-            padding-bottom: 14px; margin-bottom: 18px; border-bottom: 2px solid var(--navy);
+            padding-bottom: 14px; margin-bottom: 22px; border-bottom: 1px solid var(--navy);
         }
-        .panel-title { margin: 0; font-family: var(--serif); font-size: 24px; color: var(--navy); }
+        .panel-title { margin: 0; font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: 0.04em; color: var(--navy); }
         .panel-meta { font-size: 14px; color: var(--muted); }
 
         .group { margin-bottom: 28px; }
         .group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-        .group-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; color: var(--green); }
-        .group-title::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: var(--green); opacity: 0.7; }
-        .group-title .count { background: var(--green-soft); color: var(--green); }
+        .group-title { display: flex; align-items: center; gap: 10px; margin: 0; font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--ink); }
+        .group-title::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
         .group-tools { display: flex; align-items: center; gap: 10px; font-size: 13px; }
         .group-tools label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--muted); }
         .group-tools input, .doc-checkbox { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--green); }
         .btn-playlist-play {
             display: inline-flex; align-items: center; gap: 6px;
-            background: var(--green); color: #fff; border: none;
-            padding: 8px 14px; border-radius: 999px;
-            font-size: 13px; font-weight: 700; cursor: pointer;
-            transition: background 0.2s;
+            background: transparent; color: var(--green); border: 1px solid rgba(47, 107, 79, 0.45);
+            min-height: 40px; padding: 8px 14px; border-radius: 6px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: background 0.2s, color 0.2s;
         }
-        .btn-playlist-play:hover { background: #255a42; }
+        .btn-playlist-play:hover { background: var(--green); color: #fff; }
 
-        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+        /* 문서 목록: 책의 차례처럼 한 줄씩 (자료가 많아져도 한눈에 보이게) */
+        .doc-grid { border-top: 1px solid var(--line); }
         .doc-card {
             position: relative;
-            display: flex; flex-direction: column; gap: 14px;
-            padding: 16px;
-            background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
-            box-shadow: 0 1px 2px rgba(60, 45, 20, 0.04);
-            transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+            display: flex; align-items: center; gap: 12px;
+            padding: 7px 4px 7px 6px;
+            border-bottom: 1px solid var(--line);
+            transition: background 0.15s;
         }
-        .doc-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: #d8cbb2; }
-        .doc-top { display: flex; align-items: flex-start; gap: 10px; }
-        .doc-check { flex: none; padding-top: 3px; cursor: pointer; }
-        .doc-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
-        .doc-actions { display: flex; gap: 6px; margin-top: auto; }
+        .doc-card:hover { background: rgba(255, 253, 248, 0.75); }
+        .doc-top { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+        .doc-check { flex: none; display: flex; padding: 4px; cursor: pointer; }
+        .doc-name { flex: 1; min-width: 0; font-family: var(--serif); font-size: 16px; font-weight: 400; color: var(--ink); overflow-wrap: anywhere; word-break: keep-all; }
+        .doc-actions { flex: none; display: flex; gap: 6px; }
         .btn-view {
-            flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-            padding: 9px 12px; border: none; border-radius: 9px;
-            background: var(--navy); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
-            transition: background 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            min-height: 40px; padding: 0 14px; border: 1px solid rgba(31, 58, 95, 0.4); border-radius: 6px;
+            background: transparent; color: var(--navy); font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer;
+            transition: background 0.2s, color 0.2s;
         }
-        .btn-view:hover { background: var(--navy-deep); }
+        .btn-view:hover { background: var(--navy); color: #fff; }
+        /* 좁은 휴대폰: '듣기' 글자는 숨기고 ▶ 만 보여서 제목이 한 줄에 들어가게 */
+        @media (max-width: 480px) {
+            .doc-card, .doc-top { gap: 8px; }
+            .doc-actions { gap: 4px; }
+            .btn-view { width: 40px; padding: 0; }
+            .btn-view .btn-label { display: none; }
+            .doc-actions .btn-view .ic { width: 14px; height: 14px; }
+        }
         .btn-playlist-play .ic, .btn-view .ic { width: 12px; height: 12px; }
         .icon-btn {
-            flex: none; width: 40px; border: none; border-radius: 9px;
+            flex: none; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 6px;
             display: inline-flex; align-items: center; justify-content: center;
-            background: var(--navy-soft); color: var(--navy); cursor: pointer;
+            background: transparent; color: var(--navy); cursor: pointer;
             transition: background 0.2s;
         }
-        .icon-btn:hover, .icon-btn.open { background: #dce6f0; }
-        .icon-btn.open { box-shadow: inset 0 0 0 2px var(--navy); }
-        /* 📥 메뉴: 카드 아래로 떠서 열린다 (옆 카드 줄이 밀리지 않게) */
+        .icon-btn:hover, .icon-btn.open { background: rgba(31, 58, 95, 0.06); border-color: rgba(31, 58, 95, 0.4); }
+        /* 내려받기 메뉴: 줄 아래 오른쪽에 떠서 열린다 (목록이 밀리지 않게) */
         .dl-menu {
-            position: absolute; left: 12px; right: 12px; top: calc(100% - 8px); z-index: 5;
+            position: absolute; right: 4px; top: calc(100% - 4px); width: 210px; z-index: 5;
             display: flex; flex-direction: column; gap: 6px; padding: 8px;
-            background: var(--navy-soft); border: 1px solid #d3dfeb; border-radius: 10px;
-            box-shadow: 0 10px 24px rgba(31, 58, 95, 0.18);
+            background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+            box-shadow: 0 10px 24px rgba(60, 45, 20, 0.14);
         }
         .doc-card.menu-open { z-index: 10; }
         .dl-menu[hidden] { display: none; }
         .dl-item {
             display: flex; align-items: center; gap: 8px;
-            padding: 9px 12px; border: none; border-radius: 8px;
-            background: #fff; color: var(--navy); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer;
+            min-height: 40px; padding: 9px 12px; border: none; border-radius: 4px;
+            background: transparent; color: var(--navy); font-size: 14px; font-weight: 500; text-align: left; cursor: pointer;
         }
-        .dl-item:hover { background: #f4f7fb; }
+        .dl-item:hover { background: rgba(31, 58, 95, 0.06); }
         /* 링크 복사용 칸: 화면에는 보이지 않지만 복사할 때 쓴다 */
         .link-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-        .no-audio { margin-top: auto; font-size: 13px; color: var(--red); background: var(--red-soft); padding: 8px; border-radius: 9px; text-align: center; }
+        .no-audio { flex: none; font-size: 13px; color: var(--muted); padding: 0 10px; }
 
         .loading, .empty, .error { text-align: center; padding: 60px 12px; color: var(--muted); font-size: 15px; }
         .error { color: var(--red); }
@@ -243,15 +243,16 @@
         @media (max-width: 820px) {
             .library { grid-template-columns: 1fr; gap: 16px; }
             .subject-nav {
-                position: static; display: flex; gap: 6px; overflow-x: auto;
-                padding: 6px; scrollbar-width: none;
+                position: static; display: flex; gap: 4px; overflow-x: auto;
+                padding: 4px; scrollbar-width: none;
+                background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
             }
+            .subject-btn.active { box-shadow: inset 0 -2px 0 var(--red); }
             .subject-nav::-webkit-scrollbar { display: none; }
             .subject-btn { width: auto; flex: none; white-space: nowrap; padding: 9px 14px; font-size: 14px; }
             .subject-btn .count { margin-left: 4px; }
             .section { padding: 44px 0; }
             .hero-inner { padding: 44px 20px 48px; }
-            .hero-stats { margin-top: 30px; }
         }
 
         /* ── 바로가기 ── */
@@ -259,24 +260,22 @@
         .link-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
         .link-card {
             display: flex; flex-direction: column; gap: 8px;
-            padding: 22px; border-radius: var(--radius);
+            padding: 22px; border-radius: 4px;
             background: var(--bg); border: 1px solid var(--line);
             text-decoration: none; color: var(--ink);
-            border-top: 4px solid var(--accent);
-            transition: transform 0.15s, box-shadow 0.2s;
+            transition: border-color 0.2s;
         }
-        .link-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+        .link-card:hover { border-color: var(--accent); }
         /* 바로가기 표시: 이모지 대신 작은 네모 안에 한자 한 글자 */
         .link-mark {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 34px; height: 34px; border-radius: 9px;
-            background: rgba(60, 45, 20, 0.06);
-            background: color-mix(in srgb, var(--accent) 12%, transparent);
-            color: var(--accent); font-family: var(--serif); font-size: 17px; font-weight: 700;
+            width: 34px; height: 34px; border-radius: 3px;
+            border: 1px solid var(--accent);
+            color: var(--accent); font-family: var(--serif); font-size: 17px; font-weight: 600;
         }
-        .link-title { font-size: 17px; font-weight: 700; }
+        .link-title { font-family: var(--serif); font-size: 17px; font-weight: 600; }
         .link-host { font-size: 13px; color: var(--muted); }
-        .link-go { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--accent); }
+        .link-go { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--accent); }
         .link-go .ic { width: 14px; height: 14px; }
         .accent-navy { --accent: var(--navy); }
         .accent-green { --accent: var(--green); }
@@ -286,9 +285,9 @@
         .auth-band {
             display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
             margin-top: 28px; padding: 20px 24px;
-            background: var(--navy-soft); border-radius: var(--radius);
+            background: transparent; border: 1px solid var(--line); border-radius: 6px;
         }
-        .auth-text strong { display: block; font-size: 16px; color: var(--navy); }
+        .auth-text strong { display: block; font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--navy); }
         .auth-text span { font-size: 13px; color: var(--muted); }
         .auth-right { display: flex; align-items: center; gap: 10px; }
         .auth-code {
@@ -298,17 +297,24 @@
             padding: 6px 14px; border-radius: 8px; border: 1px solid #e3d2d0;
         }
         .copy-btn {
-            background: var(--navy); color: #fff; border: none;
-            padding: 10px 16px; border-radius: 8px;
-            font-size: 14px; font-weight: 700; cursor: pointer;
+            background: transparent; color: var(--navy); border: 1px solid rgba(31, 58, 95, 0.4);
+            min-height: 40px; padding: 8px 16px; border-radius: 6px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: background 0.2s, color 0.2s;
         }
-        .copy-btn:hover { background: var(--navy-deep); }
+        .copy-btn:hover { background: var(--navy); color: #fff; }
 
         /* ── 맨 아래 ── */
-        .site-footer { background: var(--navy-deep); color: rgba(255, 255, 255, 0.7); font-size: 13px; }
-        .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 28px 20px; }
-        .footer-brand { font-family: var(--serif); font-size: 17px; color: #fff; letter-spacing: 2px; }
-        .site-footer a { color: var(--gold); text-decoration: none; }
+        .site-footer { background: var(--bg); color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+        .footer-inner { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 40px 20px 44px; text-align: center; }
+        .footer-seal {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 3px;
+            border: 1px solid var(--red); color: var(--red);
+            font-family: var(--serif); font-size: 15px; font-weight: 600;
+        }
+        .footer-brand { font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--navy); letter-spacing: 0.3em; }
+        .site-footer a { color: var(--red); text-decoration: none; }
 
         /* ── 전체 화면 자막 재생 화면: 책상 위에 도화지 한 장을 펼친 모습 ── */
         #viewer-container {
@@ -323,7 +329,7 @@
         .top-player {
             flex: none;
             background: rgba(255, 253, 248, 0.96);
-            border-top: 3px solid var(--navy);
+            border-top: 1px solid var(--red);
             border-bottom: 1px solid #ddd2bc;
             box-shadow: 0 2px 12px rgba(60, 45, 20, 0.08);
             padding-top: env(safe-area-inset-top);
@@ -337,9 +343,9 @@
         .back-btn {
             display: inline-flex; align-items: center; gap: 4px;
             color: var(--navy); font-weight: 700; cursor: pointer;
-            background: var(--navy-soft); border: none; min-height: 40px; padding: 8px 14px; border-radius: 999px; font-size: 15px;
+            background: transparent; border: 1px solid var(--line); min-height: 40px; padding: 8px 14px; border-radius: 6px; font-size: 15px;
         }
-        .back-btn:hover { background: #dce6f0; }
+        .back-btn:hover { background: rgba(31, 58, 95, 0.06); }
         .repeat-label { color: var(--muted); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 4px; cursor: pointer; user-select: none; }
         .repeat-label input { width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--red); }
         .repeat-icon { color: var(--muted); font-size: 16px; }
@@ -380,8 +386,8 @@
         /* 지금 읽는 줄: 먹색 글씨에 형광펜을 칠한 듯 */
         .lyric-line.active {
             color: #1d1b17; font-weight: 700;
-            background-color: rgba(243, 201, 105, 0.38);
-            box-shadow: inset 4px 0 0 var(--red);
+            background-color: rgba(243, 201, 105, 0.28);
+            box-shadow: inset 2px 0 0 var(--red);
         }
         /* 휴대폰: 위쪽 막대를 얇게, 문장 사이는 조금 더 띄운다 */
         @media (max-width: 600px) {
@@ -413,25 +419,21 @@
 
         <section class="hero" id="top">
             <div class="wrap hero-inner">
-                <span class="hero-kicker">송서율창 · 誦書律唱</span>
+                <span class="hero-kicker">송서율창</span>
                 <h1 class="hero-title">誦書律唱</h1>
                 <p class="hero-sub">글을 소리로 읽고, 들으며 익히는 공부방</p>
                 <div class="hero-actions">
                     <a class="hero-btn primary" href="#library">공부 자료 보기 <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
                     <a class="hero-btn ghost" href="https://cafe.daum.net/kangchang" target="_blank">카페 바로가기 <svg class="ic" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
                 </div>
-                <div class="hero-stats">
-                    <div><div class="stat-num" id="statSubjects">–</div><div class="stat-label">과목</div></div>
-                    <div><div class="stat-num" id="statDocs">–</div><div class="stat-label">문서</div></div>
-                    <div><div class="stat-num" id="statAudio">–</div><div class="stat-label">음성 자료</div></div>
-                </div>
+                <p class="hero-colophon">과목 <span id="statSubjects">–</span> · 문서 <span id="statDocs">–</span> · 음성 <span id="statAudio">–</span></p>
             </div>
         </section>
 
         <section class="section" id="library">
             <div class="wrap">
                 <div class="section-head">
-                    <div class="section-eyebrow">LIBRARY</div>
+                    <div class="section-eyebrow">書架</div>
                     <h2 class="section-title">공부 자료</h2>
                     <p class="section-desc">과목을 고른 뒤 ▶ 듣기를 누르면 자막과 함께 들을 수 있습니다. 여러 문서를 체크하면 이어서 들을 수 있어요.</p>
                 </div>
@@ -445,7 +447,7 @@
         <section class="section section-alt" id="links">
             <div class="wrap">
                 <div class="section-head">
-                    <div class="section-eyebrow">LINKS</div>
+                    <div class="section-eyebrow">通路</div>
                     <h2 class="section-title">바로가기</h2>
                 </div>
                 <div class="link-grid">
@@ -485,6 +487,7 @@
 
         <footer class="site-footer">
             <div class="wrap footer-inner">
+                <span class="footer-seal">誦</span>
                 <span class="footer-brand">誦書律唱</span>
                 <span>송서율창 클라우드 · <a href="https://cafe.daum.net/kangchang" target="_blank">강철의 心易 자미두수 카페</a></span>
             </div>
@@ -745,7 +748,7 @@
             const shareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
             const actionsHtml = doc.audio_url ? `
                 <div class="doc-actions">
-                    <button class="btn-view" onclick="openViewerById(${id})">${ICONS.play} 듣기</button>
+                    <button class="btn-view" onclick="openViewerById(${id})" aria-label="듣기" title="자막과 함께 듣기">${ICONS.play}<span class="btn-label">듣기</span></button>
                     <button class="icon-btn" title="MP3 내려받기 · 주소 복사" aria-label="MP3 내려받기 · 주소 복사" aria-expanded="false" onclick="toggleDownloadMenu(${id}, this)">${ICONS.download}</button>
                     <button class="icon-btn" title="공유 링크 복사" aria-label="공유 링크 복사" onclick="copyAudioLink('link-${id}')">${ICONS.link}</button>
                 </div>
@@ -754,7 +757,7 @@
                     <button class="dl-item" onclick="copyMp3Url(${id}); closeDownloadMenus()">${ICONS.copy} MP3 주소 복사</button>
                 </div>
                 <input type="text" id="link-${id}" class="link-input" value="${escapeHtml(shareUrl)}" readonly tabindex="-1" aria-hidden="true">
-            ` : `<div class="no-audio">연결된 음성 파일이 없습니다</div>`;
+            ` : `<div class="no-audio">음성 없음</div>`;
 
             return `
                 <div class="doc-card">
