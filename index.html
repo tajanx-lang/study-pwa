@@ -339,9 +339,10 @@
         }
 
         // 문서 이름·분류에 < > " ' 같은 기호가 있어도 화면이 깨지지 않도록 글자로만 표시한다.
-        // 버튼에는 이름 대신 문서 번호(id)를 넘긴다.
+        // 버튼에는 이름 대신 문서 번호를 넘긴다. Supabase id 는 UUID(글자)라 숫자로 바꿀 수 없으므로,
+        // allDocuments 안에서의 위치(0, 1, 2 …)를 번호로 쓴다.
         function renderDocBox(doc, folderId) {
-            const id = Number(doc.id);
+            const id = allDocuments.indexOf(doc);
             const audioName = `${doc.title}.mp3`;
             const shareUrl = `${window.location.origin}${window.location.pathname}?title=${encodeURIComponent(doc.title)}`;
             let audioContentHtml = doc.audio_url ? `
@@ -369,12 +370,12 @@
         }
 
         function openViewerById(id) {
-            const doc = allDocuments.find(d => Number(d.id) === id);
+            const doc = allDocuments[id];
             if (doc) openViewerByTitle(doc.title);
         }
 
         function downloadAudioById(id) {
-            const doc = allDocuments.find(d => Number(d.id) === id);
+            const doc = allDocuments[id];
             if (doc && doc.audio_url) downloadAudioFile(doc.audio_url, `${doc.title}.mp3`);
         }
 
@@ -392,7 +393,7 @@
 
             currentPlaylist = [];
             checkboxes.forEach(cb => {
-                const doc = allDocuments.find(d => String(d.id) === cb.value);
+                const doc = allDocuments[Number(cb.value)];
                 if (doc && doc.audio_url) {
                     currentPlaylist.push(doc);
                 }
