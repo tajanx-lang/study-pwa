@@ -93,13 +93,24 @@
             border-bottom: 1px solid var(--line);
             color: var(--ink);
         }
-        .hero::after {
-            /* 오른쪽에 큰 한자를 옅게 깔아 분위기를 낸다 */
-            content: "誦"; position: absolute; right: 4%; bottom: -40px;
-            font-family: var(--serif); font-size: 200px; font-weight: 700; line-height: 1;
-            color: rgba(168, 50, 42, 0.05); pointer-events: none;
+        /* 오른쪽 위에서 늘어진 매화 가지 (먹 번진 가지 + 연분홍 꽃잎) */
+        .hero-plum {
+            position: absolute; top: 0; right: 0;
+            width: min(58%, 640px); height: auto;
+            opacity: 0.88;
+            pointer-events: none;
         }
-        @media (max-width: 640px) { .hero::after { display: none; } }
+        .hero-plum .falling { animation: petal-fall 14s linear infinite; opacity: 0; }
+        .hero-plum .falling.p2 { animation-delay: 4.5s; }
+        .hero-plum .falling.p3 { animation-delay: 9s; }
+        @keyframes petal-fall {
+            0%   { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+            10%  { opacity: 0.85; }
+            80%  { opacity: 0.6; }
+            100% { opacity: 0; transform: translate(-90px, 200px) rotate(160deg); }
+        }
+        @media (prefers-reduced-motion: reduce) { .hero-plum .falling { animation: none; opacity: 0.6; } }
+        @media (max-width: 640px) { .hero-plum { width: 78%; opacity: 0.45; } }
         .hero-inner { position: relative; z-index: 1; padding: 60px 20px 64px; }
         .hero-kicker {
             display: inline-block; margin-bottom: 18px;
@@ -418,6 +429,85 @@
         </header>
 
         <section class="hero" id="top">
+            <!-- 매화 그림: 바깥 그림 파일 없이 이 안에서 직접 그린다 -->
+            <svg class="hero-plum" viewBox="0 0 560 380" aria-hidden="true" focusable="false">
+                <defs>
+                    <!-- 먹이 종이에 번진 듯 가지 테두리를 살짝 거칠게 -->
+                    <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7"/>
+                        <feDisplacementMap in="SourceGraphic" scale="3.5"/>
+                    </filter>
+                    <radialGradient id="petal" cx="50%" cy="80%" r="75%">
+                        <stop offset="0" stop-color="#fffafa"/>
+                        <stop offset="0.6" stop-color="#fbe6ea"/>
+                        <stop offset="1" stop-color="#f1c4cf"/>
+                    </radialGradient>
+                    <!-- 꽃 한 송이: 꽃잎 다섯 장 + 꽃술 -->
+                    <g id="blossom">
+                        <g fill="url(#petal)" stroke="#e7b3bf" stroke-width="0.8">
+                            <ellipse cx="0" cy="-10" rx="8.5" ry="10.5"/>
+                            <ellipse cx="0" cy="-10" rx="8.5" ry="10.5" transform="rotate(72)"/>
+                            <ellipse cx="0" cy="-10" rx="8.5" ry="10.5" transform="rotate(144)"/>
+                            <ellipse cx="0" cy="-10" rx="8.5" ry="10.5" transform="rotate(216)"/>
+                            <ellipse cx="0" cy="-10" rx="8.5" ry="10.5" transform="rotate(288)"/>
+                        </g>
+                        <g stroke="#b98a3e" stroke-width="0.7" stroke-linecap="round">
+                            <path d="M0 0 L0 -7 M0 0 L5 -5 M0 0 L7 1 M0 0 L4 6 M0 0 L-4 6 M0 0 L-7 1 M0 0 L-5 -5"/>
+                        </g>
+                        <g fill="#c99a3f">
+                            <circle cx="0" cy="-7" r="1.1"/><circle cx="5" cy="-5" r="1.1"/><circle cx="7" cy="1" r="1.1"/>
+                            <circle cx="4" cy="6" r="1.1"/><circle cx="-4" cy="6" r="1.1"/><circle cx="-7" cy="1" r="1.1"/><circle cx="-5" cy="-5" r="1.1"/>
+                        </g>
+                        <circle r="2.4" fill="#c4566e"/>
+                    </g>
+                    <!-- 아직 피지 않은 꽃봉오리 -->
+                    <g id="bud">
+                        <ellipse cx="0" cy="-4" rx="4.2" ry="5.5" fill="#efb6c3" stroke="#d68fa1" stroke-width="0.7"/>
+                        <path d="M-3 0 Q0 3 3 0" fill="#7a5a48"/>
+                    </g>
+                    <ellipse id="petal1" rx="5" ry="6.5" fill="url(#petal)" stroke="#e7b3bf" stroke-width="0.6"/>
+                </defs>
+
+                <!-- 가지 -->
+                <g filter="url(#ink)" fill="none" stroke="#4a3a31" stroke-linecap="round" opacity="0.72">
+                    <path d="M565 14 C 500 34, 455 62, 405 108 S 318 190, 262 222 S 182 266, 128 300" stroke-width="7"/>
+                    <path d="M440 80 C 432 56, 438 36, 456 16" stroke-width="3.5"/>
+                    <path d="M372 140 C 384 170, 404 192, 438 206" stroke-width="3.5"/>
+                    <path d="M300 196 C 288 172, 276 158, 258 150" stroke-width="3"/>
+                    <path d="M206 254 C 200 278, 206 296, 222 316" stroke-width="2.6"/>
+                    <path d="M128 300 C 112 310, 100 312, 86 310" stroke-width="2.2"/>
+                    <path d="M438 206 C 452 214, 466 214, 482 210" stroke-width="2"/>
+                </g>
+
+                <!-- 꽃 -->
+                <g opacity="0.95">
+                    <use href="#blossom" transform="translate(492 40) scale(1.15) rotate(10)"/>
+                    <use href="#blossom" transform="translate(446 76) scale(0.9) rotate(-20)"/>
+                    <use href="#blossom" transform="translate(458 22) scale(0.7) rotate(30)"/>
+                    <use href="#blossom" transform="translate(404 112) scale(1.2) rotate(5)"/>
+                    <use href="#blossom" transform="translate(376 146) scale(0.85) rotate(40)"/>
+                    <use href="#blossom" transform="translate(420 200) scale(1.05) rotate(-15)"/>
+                    <use href="#blossom" transform="translate(338 172) scale(0.8) rotate(20)"/>
+                    <use href="#blossom" transform="translate(286 206) scale(1.1) rotate(-5)"/>
+                    <use href="#blossom" transform="translate(262 152) scale(0.75) rotate(25)"/>
+                    <use href="#blossom" transform="translate(214 254) scale(0.95) rotate(12)"/>
+                    <use href="#blossom" transform="translate(222 312) scale(0.7) rotate(-30)"/>
+                    <use href="#blossom" transform="translate(162 282) scale(0.85) rotate(18)"/>
+                </g>
+                <g>
+                    <use href="#bud" transform="translate(470 210) rotate(70)"/>
+                    <use href="#bud" transform="translate(484 209) rotate(95) scale(0.8)"/>
+                    <use href="#bud" transform="translate(96 310) rotate(-80)"/>
+                    <use href="#bud" transform="translate(116 304) rotate(-60) scale(0.85)"/>
+                    <use href="#bud" transform="translate(250 146) rotate(-40) scale(0.8)"/>
+                    <use href="#bud" transform="translate(526 24) rotate(20) scale(0.9)"/>
+                </g>
+
+                <!-- 바람에 천천히 떨어지는 꽃잎 몇 장 -->
+                <g transform="translate(380 180)"><use class="falling" href="#petal1"/></g>
+                <g transform="translate(300 230) rotate(30)"><use class="falling p2" href="#petal1"/></g>
+                <g transform="translate(470 120) rotate(-20)"><use class="falling p3" href="#petal1"/></g>
+            </svg>
             <div class="wrap hero-inner">
                 <span class="hero-kicker">송서율창</span>
                 <h1 class="hero-title">誦書律唱</h1>
