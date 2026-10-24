@@ -9,7 +9,7 @@
     <!-- 글꼴: 제목은 명조체(Noto Serif KR), 본문은 고딕체(Noto Sans KR) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- CryptoJS MD5 -->
@@ -285,54 +285,87 @@
         .footer-brand { font-family: var(--serif); font-size: 17px; color: #fff; letter-spacing: 2px; }
         .site-footer a { color: var(--gold); text-decoration: none; }
 
-        /* ── 전체 화면 자막 재생 화면 ── */
+        /* ── 전체 화면 자막 재생 화면: 책상 위에 도화지 한 장을 펼친 모습 ── */
         #viewer-container {
             display: none;
             position: fixed; inset: 0;
             height: 100vh; height: 100dvh;
-            background: #111214; color: #fff;
+            background: #e9e1cf;
+            color: var(--ink);
             flex-direction: column;
             z-index: 1000;
         }
         .top-player {
             flex: none;
-            width: 100%; max-width: 760px; margin: 0 auto;
+            background: rgba(255, 253, 248, 0.96);
+            border-top: 3px solid var(--navy);
+            border-bottom: 1px solid #ddd2bc;
+            box-shadow: 0 2px 12px rgba(60, 45, 20, 0.08);
+            padding-top: env(safe-area-inset-top);
+        }
+        .top-player-inner {
+            max-width: 800px; margin: 0 auto;
             padding: 12px 16px 14px;
-            padding-top: max(12px, env(safe-area-inset-top));
-            background: #1c1d21;
-            border-bottom: 1px solid #2a2b30;
             display: flex; flex-direction: column; gap: 10px;
         }
-        @media (min-width: 780px) { .top-player { border-radius: 0 0 16px 16px; border: 1px solid #2a2b30; border-top: none; } }
         .player-info-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; }
         .back-btn {
-            color: #a9c8ef; text-decoration: none; font-weight: 700; cursor: pointer;
-            background: none; border: none; padding: 4px 0; font-size: 14px;
+            display: inline-flex; align-items: center; gap: 4px;
+            color: var(--navy); font-weight: 700; cursor: pointer;
+            background: var(--navy-soft); border: none; min-height: 40px; padding: 8px 14px; border-radius: 999px; font-size: 15px;
         }
-        .repeat-label { color: #ddd; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
-        .repeat-label input { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--gold); }
-        .now-playing { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+        .back-btn:hover { background: #dce6f0; }
+        .repeat-label { color: var(--muted); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 4px; cursor: pointer; user-select: none; }
+        .repeat-label input { width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--red); }
+        .repeat-icon { color: var(--muted); font-size: 16px; }
+        .now-playing { display: flex; align-items: center; gap: 10px; min-width: 0; }
         .playlist-status {
-            flex: none; font-size: 12px; font-weight: 700; color: #111;
-            background: var(--gold); padding: 2px 8px; border-radius: 999px;
+            flex: none; font-size: 12px; font-weight: 600; color: var(--red);
+            background: transparent; border: 1px solid rgba(168, 50, 42, 0.35);
+            padding: 1px 8px; border-radius: 6px;
         }
         .viewer-title {
-            min-width: 0; font-family: var(--serif); font-size: 17px; font-weight: 700; color: #fff;
+            min-width: 0; font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--navy);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .top-player audio { width: 100%; height: 40px; }
+        .top-player audio { width: 100%; height: 42px; border-radius: 999px; }
+        .top-player audio::-webkit-media-controls-panel { background: #f3ede0; }
 
+        .lyrics-scroll { flex: 1; overflow-y: auto; padding: 24px 14px; scrollbar-color: #cbbd9f transparent; scrollbar-width: thin; }
+        /* 도화지: 따뜻한 미색 종이에 아주 옅은 결을 입힌다 */
         .lyrics-container {
-            flex: 1; overflow-y: auto;
-            width: 100%; max-width: 760px; margin: 0 auto;
-            padding: 30px 20px 50vh;
-            text-align: center; line-height: 2; font-size: 17px;
+            max-width: 760px; margin: 0 auto 45vh;
+            padding: 48px 40px;
+            background-color: #fffdf7;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.25 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            border: 1px solid #e6dcc7;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(60, 45, 20, 0.08), 0 12px 32px rgba(60, 45, 20, 0.12);
+            text-align: center;
+            font-family: var(--serif);
+            font-size: 18px; line-height: 2;
+            color: #5e574c;
+            word-break: keep-all; overflow-wrap: anywhere; /* 한글 낱말이 줄 끝에서 쪼개지지 않게 */
         }
-        .lyric-line { color: #6f727a; transition: all 0.25s ease; margin: 14px 0; padding: 8px 14px; border-radius: 10px; }
+        .lyric-line {
+            margin: 6px 0; padding: 10px 16px; border-radius: 8px;
+            text-wrap: balance; /* 마지막 줄에 낱말 하나만 외롭게 남지 않게 */
+            transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        /* 지금 읽는 줄: 먹색 글씨에 형광펜을 칠한 듯 */
         .lyric-line.active {
-            color: var(--gold); font-size: 20px; font-weight: 700;
-            background: rgba(243, 201, 105, 0.12);
-            transform: scale(1.02);
+            color: #1d1b17; font-weight: 700;
+            background-color: rgba(243, 201, 105, 0.38);
+            box-shadow: inset 4px 0 0 var(--red);
+        }
+        /* 휴대폰: 위쪽 막대를 얇게, 문장 사이는 조금 더 띄운다 */
+        @media (max-width: 600px) {
+            .top-player-inner { padding: 8px 12px 10px; gap: 6px; }
+            .top-player audio { height: 38px; }
+            .viewer-title { font-size: 17px; }
+            .lyrics-scroll { padding: 12px 10px; }
+            .lyrics-container { padding: 30px 18px; font-size: 17px; line-height: 1.85; }
+            .lyric-line { margin: 10px 0; }
         }
     </style>
 </head>
@@ -436,19 +469,23 @@
     <!-- 전체 화면 자막 동기화 뷰어 -->
     <div id="viewer-container">
         <div class="top-player">
-            <div class="player-info-row">
-                <button class="back-btn" onclick="closeViewer()">‹ 목록으로</button>
-                <label class="repeat-label">
-                    <input type="checkbox" id="repeatCheckbox"> 🔁 반복재생
-                </label>
+            <div class="top-player-inner">
+                <div class="player-info-row">
+                    <button class="back-btn" onclick="closeViewer()">‹ 목록으로</button>
+                    <label class="repeat-label">
+                        <input type="checkbox" id="repeatCheckbox"> <span class="repeat-icon">↻</span> 반복재생
+                    </label>
+                </div>
+                <div class="now-playing">
+                    <span id="playlistStatus" class="playlist-status">1 / 1</span>
+                    <span id="viewerTitle" class="viewer-title"></span>
+                </div>
+                <audio id="audioPlayer" controls></audio>
             </div>
-            <div class="now-playing">
-                <span id="playlistStatus" class="playlist-status">1 / 1</span>
-                <span id="viewerTitle" class="viewer-title"></span>
-            </div>
-            <audio id="audioPlayer" controls></audio>
         </div>
-        <div class="lyrics-container" id="lyricsContainer"></div>
+        <div class="lyrics-scroll" id="lyricsScroll">
+            <div class="lyrics-container" id="lyricsContainer"></div>
+        </div>
     </div>
 
     <script>
@@ -806,7 +843,10 @@
             currentPlaylistIndex = index;
 
             const doc = currentPlaylist[index];
-            document.getElementById('playlistStatus').textContent = `${index + 1} / ${currentPlaylist.length}`;
+            const status = document.getElementById('playlistStatus');
+            status.textContent = `${index + 1} / ${currentPlaylist.length}`;
+            // 문서 하나만 들을 때는 '1 / 1' 이 필요 없으므로 숨긴다
+            status.style.display = currentPlaylist.length > 1 ? '' : 'none';
             document.getElementById('viewerTitle').textContent = doc.title;
 
             const audio = document.getElementById('audioPlayer');
@@ -814,7 +854,7 @@
 
             const container = document.getElementById('lyricsContainer');
             container.innerHTML = '';
-            container.scrollTop = 0;
+            document.getElementById('lyricsScroll').scrollTop = 0;
 
             const finalSentences = [];
             if (doc.content) {

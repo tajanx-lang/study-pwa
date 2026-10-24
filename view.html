@@ -4,33 +4,58 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>정밀 자막 동기화 재생</title>
-    <meta name="theme-color" content="#1c1d21">
+    <meta name="theme-color" content="#fffdf8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* index.html 의 자막 재생 화면과 같은 모양 */
-        :root { --gold: #f3c969; --serif: "Noto Serif KR", serif; --sans: "Noto Sans KR", -apple-system, "Malgun Gothic", sans-serif; }
+        /* index.html 의 자막 재생 화면과 같은 모양: 책상 위에 도화지 한 장을 펼친 모습 */
+        :root { --ink: #2b2925; --muted: #7b7366; --navy: #1f3a5f; --navy-soft: #eaf0f6; --red: #a8322a; --serif: "Noto Serif KR", serif; --sans: "Noto Sans KR", -apple-system, "Malgun Gothic", sans-serif; }
         * { box-sizing: border-box; }
-        body { font-family: var(--sans); margin: 0; padding: 0; background: #111214; color: #fff; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-        /* 넓은 화면에서도 휴대폰 화면 크기의 카드처럼 가운데에 보이게 한다 */
-        .top-player { flex: none; width: 100%; max-width: 640px; margin: 0 auto; padding: 12px 16px 14px; padding-top: max(12px, env(safe-area-inset-top)); background: #1c1d21; border-bottom: 1px solid #2a2b30; display: flex; flex-direction: column; gap: 10px; }
-        @media (min-width: 660px) { .top-player { border-radius: 0 0 16px 16px; border: 1px solid #2a2b30; border-top: none; } }
-        audio { width: 100%; height: 40px; }
-        .back-btn { align-self: flex-start; color: #a9c8ef; text-decoration: none; font-size: 14px; font-weight: 700; background: none; border: none; padding: 4px 0; cursor: pointer; font-family: inherit; }
-        .viewer-title { font-family: var(--serif); font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .lyrics-container { flex: 1; overflow-y: auto; width: 100%; max-width: 640px; margin: 0 auto; padding: 30px 20px 50vh; text-align: center; line-height: 2; font-size: 17px; color: #6f727a; }
-        .lyric-line { color: #6f727a; transition: all 0.25s ease; margin: 14px 0; padding: 8px 14px; border-radius: 10px; }
-        .lyric-line.active { color: var(--gold); font-size: 20px; font-weight: 700; background: rgba(243, 201, 105, 0.12); transform: scale(1.02); }
+        body { font-family: var(--sans); margin: 0; padding: 0; background: #e9e1cf; color: var(--ink); display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+        .top-player { flex: none; background: rgba(255, 253, 248, 0.96); border-top: 3px solid var(--navy); border-bottom: 1px solid #ddd2bc; box-shadow: 0 2px 12px rgba(60, 45, 20, 0.08); padding-top: env(safe-area-inset-top); }
+        .top-player-inner { max-width: 800px; margin: 0 auto; padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+        audio { width: 100%; height: 42px; border-radius: 999px; }
+        audio::-webkit-media-controls-panel { background: #f3ede0; }
+        .back-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; color: var(--navy); text-decoration: none; font-size: 14px; font-weight: 700; background: var(--navy-soft); border: none; min-height: 40px; padding: 8px 14px; font-size: 15px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+        .back-btn:hover { background: #dce6f0; }
+        .viewer-title { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lyrics-scroll { flex: 1; overflow-y: auto; padding: 24px 14px; scrollbar-color: #cbbd9f transparent; scrollbar-width: thin; }
+        /* 도화지: 따뜻한 미색 종이에 아주 옅은 결을 입힌다 */
+        .lyrics-container {
+            max-width: 760px; margin: 0 auto 45vh; padding: 48px 40px;
+            background-color: #fffdf7;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.25 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            border: 1px solid #e6dcc7; border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(60, 45, 20, 0.08), 0 12px 32px rgba(60, 45, 20, 0.12);
+            text-align: center; font-family: var(--serif); font-size: 18px; line-height: 2; color: #5e574c;
+            word-break: keep-all; overflow-wrap: anywhere; /* 한글 낱말이 줄 끝에서 쪼개지지 않게 */
+        }
+        .lyric-line { margin: 6px 0; padding: 10px 16px; border-radius: 8px; text-wrap: balance; transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease; }
+        /* 지금 읽는 줄: 먹색 글씨에 형광펜을 칠한 듯 */
+        .lyric-line.active { color: #1d1b17; font-weight: 700; background-color: rgba(243, 201, 105, 0.38); box-shadow: inset 4px 0 0 var(--red); }
+        /* 휴대폰: 위쪽 막대를 얇게, 문장 사이는 조금 더 띄운다 */
+        @media (max-width: 600px) {
+            .top-player-inner { padding: 8px 12px 10px; gap: 6px; }
+            audio { height: 38px; }
+            .viewer-title { font-size: 17px; }
+            .lyrics-scroll { padding: 12px 10px; }
+            .lyrics-container { padding: 30px 18px; font-size: 17px; line-height: 1.85; }
+            .lyric-line { margin: 10px 0; }
+        }
     </style>
 </head>
 <body>
     <div class="top-player">
-        <a class="back-btn" id="backBtn" href="index.html">‹ 목록으로</a>
-        <div class="viewer-title" id="viewerTitle"></div>
-        <audio id="audioPlayer" controls></audio>
+        <div class="top-player-inner">
+            <a class="back-btn" id="backBtn" href="index.html">‹ 목록으로</a>
+            <div class="viewer-title" id="viewerTitle"></div>
+            <audio id="audioPlayer" controls></audio>
+        </div>
     </div>
-    <div class="lyrics-container" id="lyricsContainer">로딩 중...</div>
+    <div class="lyrics-scroll">
+        <div class="lyrics-container" id="lyricsContainer">로딩 중...</div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
