@@ -174,7 +174,7 @@
         .group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
         .group-title { display: flex; align-items: center; gap: 10px; margin: 0; font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--ink); }
         .group-title::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
-        .group-tools { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .group-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; }
         .group-tools label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--muted); }
         .group-tools input, .doc-checkbox { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--green); }
         .btn-playlist-play {
@@ -185,6 +185,8 @@
             transition: background 0.2s, color 0.2s;
         }
         .btn-playlist-play:hover { background: var(--green); color: #fff; }
+        .btn-playlist-link { color: var(--navy); border-color: rgba(31, 58, 95, 0.4); }
+        .btn-playlist-link:hover { background: var(--navy); color: #fff; }
 
         /* 문서 목록: 책의 차례처럼 한 줄씩 (자료가 많아져도 한눈에 보이게) */
         .doc-grid { border-top: 1px solid var(--line); }
@@ -870,7 +872,13 @@
                 // 💡 공유된 링크(?title=문서이름)로 접속했을 경우 자동 실행
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetTitle = urlParams.get('title');
-                if (targetTitle) {
+                // 여러 문서를 엮은 링크(?t=문서1&t=문서2 …)는 그 순서대로 이어서 재생한다
+                const listTitles = urlParams.getAll('t');
+                if (listTitles.length > 0) {
+                    setTimeout(() => {
+                        openPlaylistByTitles(listTitles);
+                    }, 300);
+                } else if (targetTitle) {
                     setTimeout(() => {
                         openViewerByTitle(targetTitle);
                     }, 300);
@@ -929,6 +937,7 @@
                         <div class="group-tools">
                             <label><input type="checkbox" onchange="toggleSelectAll(this, '${folderId}')"> 전체선택</label>
                             <button class="btn-playlist-play" onclick="playSelectedFolder('${folderId}')">${ICONS.play} 선택 연속 재생</button>
+                            <button class="btn-playlist-play btn-playlist-link" onclick="copySelectedLink('${folderId}')" title="체크한 문서들을 이어 듣는 링크를 복사합니다">${ICONS.link} 선택 링크</button>
                         </div>
                     </div>
                     <div class="doc-grid" id="${folderId}">
@@ -1003,11 +1012,9 @@
             if (!e.target.closest('.dl-menu') && !e.target.closest('.icon-btn')) closeDownloadMenus();
         });
 
-        function copyMp3Url(id) {
-            const doc = allDocuments[id];
-            if (!doc || !doc.audio_url) return;
-            const url = doc.audio_url;
-            const done = () => alert("MP3 주소가 복사되었습니다!\n" + url);
+        // 주소를 복사하고 알림을 띄운다. 복사가 막힌 휴대폰에서는 주소 창을 띄워 직접 복사하게 한다.
+        function copyUrlWithAlert(url, message) {
+            const done = () => alert(message + "\n" + url);
             const fallback = () => {
                 const textarea = document.createElement('textarea');
                 textarea.value = url;
@@ -1027,6 +1034,43 @@
             } else {
                 fallback();
             }
+        }
+
+        function copyMp3Url(id) {
+            const doc = allDocuments[id];
+            if (!doc || !doc.audio_url) return;
+            copyUrlWithAlert(doc.audio_url, "MP3 주소가 복사되었습니다!");
+        }
+
+        // 체크한 문서들만 엮어 '이어 듣기' 링크를 만든다 (?t=문서1&t=문서2 …, 목록 순서 그대로)
+        function copySelectedLink(folderId) {
+            const titles = [];
+            document.querySelectorAll(`input.doc-checkbox.${folderId}:checked`).forEach(cb => {
+                const doc = allDocuments[Number(cb.value)];
+                if (doc && doc.audio_url) titles.push(doc.title);
+            });
+            if (titles.length === 0) {
+                alert("링크로 엮을 문서를 하나 이상 체크해 주세요.\n(음성이 있는 문서만 엮을 수 있습니다)");
+                return;
+            }
+            const params = new URLSearchParams();
+            titles.forEach(t => params.append('t', t));
+            const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            copyUrlWithAlert(url, `선택한 ${titles.length}개 문서를 이어 듣는 링크가 복사되었습니다!`);
+        }
+
+        // 엮은 링크로 들어왔을 때: 적힌 순서대로 재생 목록을 만든다
+        function openPlaylistByTitles(titles) {
+            const docs = titles
+                .map(t => allDocuments.find(d => d.title === t))
+                .filter(d => d && d.audio_url);
+            if (docs.length === 0) {
+                alert("링크에 담긴 문서를 찾을 수 없습니다.");
+                return;
+            }
+            currentPlaylist = docs;
+            currentPlaylistIndex = 0;
+            startPlaylistPlayback();
         }
 
         function toggleSelectAll(masterCheckbox, folderId) {
