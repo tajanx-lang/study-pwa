@@ -1139,8 +1139,17 @@
 
             const finalSentences = [];
             if (doc.content) {
+                // PC 앱(win_vloger sentences.py)과 같은 규칙: 첫 줄(주제)이 60자 이하면 '.'이 있어도 한 문장
+                let firstLine = true;
                 doc.content.split(/\r?\n/).forEach(line => {
                     if (!line.trim()) return;
+                    if (firstLine) {
+                        firstLine = false;
+                        if (line.trim().length <= 60) {
+                            finalSentences.push(line.trim());
+                            return;
+                        }
+                    }
                     const matches = line.match(/([^\r\n.!?]+[.!?]*['"”’]*)/g);
                     if (matches) {
                         matches.forEach(m => {
