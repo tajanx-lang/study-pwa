@@ -403,14 +403,15 @@
             background-color: rgba(243, 201, 105, 0.28);
             box-shadow: inset 2px 0 0 var(--red);
         }
-        /* 문서 출처: 도화지 맨 위에 작은 그림과 이름 */
+        /* 문서 출처: 도화지 맨 아래(글 끝)에 작은 그림과 이름 */
         .doc-source {
-            margin: 0 auto 28px; padding-bottom: 20px;
-            border-bottom: 1px dashed #e6dcc7;
+            margin: 32px auto 0; padding-top: 24px;
+            border-top: 1px dashed #e6dcc7;
             font-size: 13px; line-height: 1.6; color: #8a8173;
         }
+        .doc-source summary { margin-top: 8px; cursor: pointer; color: #8a5a3c; list-style-position: inside; }
         .doc-source img {
-            display: block; margin: 0 auto 10px;
+            display: block; margin: 12px auto 0;
             max-width: 60%; max-height: 260px;
             border-radius: 4px; box-shadow: 0 4px 14px rgba(60, 45, 20, 0.18);
         }
@@ -1149,20 +1150,13 @@
             container.innerHTML = '';
             document.getElementById('lyricsScroll').scrollTop = 0;
 
-            // 문서 출처 (PC 앱 출처 창에서 넣은 이름·그림, documents.source_name / source_image_url)
+            // 문서 출처 (PC 앱 출처 창에서 넣은 이름·그림, documents.source_name / source_image_url) — 글 맨 끝에 붙임
             const sourceName = (doc.source_name || '').trim();
             const sourceImage = (doc.source_image_url || '').trim();
+            let sourceBox = null;
             if (sourceName || sourceImage) {
                 const box = document.createElement('div');
                 box.className = 'doc-source';
-                if (/^https?:\/\//.test(sourceImage)) {
-                    const img = document.createElement('img');
-                    img.src = sourceImage;
-                    img.alt = '출처 그림';
-                    img.loading = 'lazy';
-                    img.onerror = () => img.remove();
-                    box.appendChild(img);
-                }
                 const caption = document.createElement('div');
                 if (/^https?:\/\/\S+$/.test(sourceName)) {
                     // 출처 이름 칸에 책·사이트 주소를 넣은 경우: 누르면 새 탭으로 열리는 링크
@@ -1179,7 +1173,20 @@
                     caption.textContent = '출처 · ' + (sourceName || '그림');
                 }
                 box.appendChild(caption);
-                container.appendChild(box);
+                if (/^https?:\/\//.test(sourceImage)) {
+                    // 그림은 처음엔 접어 두고 '출처 그림 보기'를 눌러야 펼쳐짐
+                    const fold = document.createElement('details');
+                    const summary = document.createElement('summary');
+                    summary.textContent = '출처 그림 보기';
+                    const img = document.createElement('img');
+                    img.src = sourceImage;
+                    img.alt = '출처 그림';
+                    img.loading = 'lazy';
+                    img.onerror = () => fold.remove();
+                    fold.append(summary, img);
+                    box.appendChild(fold);
+                }
+                sourceBox = box;
             }
 
             const finalSentences = [];
@@ -1215,6 +1222,7 @@
                 div.textContent = sent;
                 container.appendChild(div);
             });
+            if (sourceBox) container.appendChild(sourceBox);
 
             const lines = document.querySelectorAll('.lyric-line');
             let rawSyncData = doc.sync_data;
