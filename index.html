@@ -403,6 +403,18 @@
             background-color: rgba(243, 201, 105, 0.28);
             box-shadow: inset 2px 0 0 var(--red);
         }
+        /* 문서 출처: 도화지 맨 위에 작은 그림과 이름 */
+        .doc-source {
+            margin: 0 auto 28px; padding-bottom: 20px;
+            border-bottom: 1px dashed #e6dcc7;
+            font-size: 13px; line-height: 1.6; color: #8a8173;
+        }
+        .doc-source img {
+            display: block; margin: 0 auto 10px;
+            max-width: 60%; max-height: 260px;
+            border-radius: 4px; box-shadow: 0 4px 14px rgba(60, 45, 20, 0.18);
+        }
+        .doc-source a { color: #8a5a3c; text-decoration: underline; text-underline-offset: 3px; }
         /* 휴대폰: 위쪽 막대를 얇게, 문장 사이는 조금 더 띄운다 */
         @media (max-width: 600px) {
             .top-player-inner { padding: 8px 12px 10px; gap: 6px; }
@@ -819,7 +831,7 @@
 
                 const { data, error } = await supabaseClient
                     .from('documents')
-                    .select('id, category, sub_category, title, audio_url, content, sync_data');
+                    .select('id, category, sub_category, title, audio_url, content, sync_data, source_name, source_image_url');
 
                 if (error) throw error;
                 if (!data || data.length === 0) {
@@ -1136,6 +1148,39 @@
             const container = document.getElementById('lyricsContainer');
             container.innerHTML = '';
             document.getElementById('lyricsScroll').scrollTop = 0;
+
+            // 문서 출처 (PC 앱 출처 창에서 넣은 이름·그림, documents.source_name / source_image_url)
+            const sourceName = (doc.source_name || '').trim();
+            const sourceImage = (doc.source_image_url || '').trim();
+            if (sourceName || sourceImage) {
+                const box = document.createElement('div');
+                box.className = 'doc-source';
+                if (/^https?:\/\//.test(sourceImage)) {
+                    const img = document.createElement('img');
+                    img.src = sourceImage;
+                    img.alt = '출처 그림';
+                    img.loading = 'lazy';
+                    img.onerror = () => img.remove();
+                    box.appendChild(img);
+                }
+                const caption = document.createElement('div');
+                if (/^https?:\/\/\S+$/.test(sourceName)) {
+                    // 출처 이름 칸에 책·사이트 주소를 넣은 경우: 누르면 새 탭으로 열리는 링크
+                    caption.append('출처 · ');
+                    const link = document.createElement('a');
+                    link.href = sourceName;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    let host = sourceName;
+                    try { host = new URL(sourceName).hostname.replace(/^www\./, ''); } catch (e) {}
+                    link.textContent = host + ' ↗';
+                    caption.appendChild(link);
+                } else {
+                    caption.textContent = '출처 · ' + (sourceName || '그림');
+                }
+                box.appendChild(caption);
+                container.appendChild(box);
+            }
 
             const finalSentences = [];
             if (doc.content) {
