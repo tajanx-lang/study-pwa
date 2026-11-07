@@ -2,27 +2,25 @@ name: PythonAnywhere Auto Extend
 
 on:
   schedule:
-    - cron: '0 0 1 * *'
+    # 매주 월요일 오전 9시(한국 시간) = UTC 0시
+    - cron: '0 0 * * 1'
   workflow_dispatch: # 수동 테스트 가능
 
 jobs:
   extend-pa:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           pip install playwright
-          playwright install chromium
+          playwright install --with-deps chromium
 
-      - name: Run Python script to click extend button
+      - name: Extend and verify
         env:
           PA_USER_1: ${{ secrets.PA_USER_1 }}
           PA_PASS_1: ${{ secrets.PA_PASS_1 }}
@@ -30,46 +28,87 @@ jobs:
           PA_PASS_2: ${{ secrets.PA_PASS_2 }}
         run: |
           python - << 'EOF'
-          import os
+          import os, re, sys
+          from datetime import date, datetime
           from playwright.sync_api import sync_playwright
 
-          def extend_account(username, password):
+          MIN_DAYS_LEFT = 20  # 연장 후 남은 날이 이보다 적으면 실패로 본다
+          DATE_RE = re.compile(r"disabled on\s+(?:\w+day\s+)?(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})")
+
+          def days_left(text):
+              m = DATE_RE.search(text)
+              if not m:
+                  return None
+              d = datetime.strptime(" ".join(m.groups()), "%d %B %Y").date()
+              return (d - date.today()).days
+
+          def extend_account(label, username, password):
               if not username or not password:
-                  print(f"[{username}] 계정 정보가 없습니다.")
-                  return
-              
-              print(f"[{username}] PythonAnywhere 자동 연장 시작...")
+                  raise RuntimeError(f"[{label}] 계정 정보(Secrets)가 없습니다.")
+
+              print(f"[{label}] 연장 시작")
               with sync_playwright() as p:
                   browser = p.chromium.launch(headless=True)
                   page = browser.new_page()
-                  
                   try:
-                      # 1. 로그인 페이지 접속
+                      # 1. 로그인
                       page.goto("https://www.pythonanywhere.com/login/")
                       page.fill('input[name="auth-username"]', username)
                       page.fill('input[name="auth-password"]', password)
                       page.click('button[type="submit"]')
                       page.wait_for_load_state("networkidle")
-                      
-                      # 2. 웹앱 설정 페이지로 이동
-                      page.goto(f"https://www.pythonanywhere.com/user/{username}/webapps/")
+                      if "/login" in page.url:
+                          raise RuntimeError(f"[{label}] 로그인 실패 (아이디/암호 확인)")
+
+                      # 2. Web 탭
+                      webapps = f"https://www.pythonanywhere.com/user/{username}/webapps/"
+                      page.goto(webapps)
                       page.wait_for_load_state("networkidle")
-                      
-                      # 3. 노란색 연장 버튼("Run until 1 month from today") 찾기 및 클릭
-                      button = page.get_by_text("Run until 1 month from today")
-                      if button.count() > 0 and button.first.is_visible():
-                          button.first.click()
-                          print(f"[{username}] 'Run until 1 month from today' 버튼 클릭 성공!")
-                          page.wait_for_timeout(3000)
-                      else:
-                          print(f"[{username}] 연장 버튼이 보이지 않습니다. (이미 연장되었거나 대상 아님)")
-                          
-                  except Exception as e:
-                      print(f"[{username}] 오류 발생: {e}")
-                      raise e
+                      before = page.inner_text("body")
+                      print(f"[{label}] 연장 전 남은 날: {days_left(before)}"
+                            f"{' (만료됨)' if 'has expired' in before else ''}")
+
+                      # 3. 연장 버튼 클릭 (항상 누른다: 누를수록 오늘부터 1달로 갱신)
+                      button = page.get_by_role("button", name=re.compile("Run until 1 month from today"))
+                      if button.count() == 0:
+                          button = page.get_by_text("Run until 1 month from today")
+                      if button.count() == 0:
+                          raise RuntimeError(f"[{label}] 연장 버튼을 찾지 못했습니다.")
+                      button.first.click()
+                      page.wait_for_load_state("networkidle")
+                      page.wait_for_timeout(5000)
+
+                      # 4. 다시 열어서 실제로 연장됐는지 확인
+                      page.goto(webapps)
+                      page.wait_for_load_state("networkidle")
+                      after = page.inner_text("body")
+                      left = days_left(after)
+                      print(f"[{label}] 연장 후 남은 날: {left}")
+                      if "has expired" in after or left is None or left < MIN_DAYS_LEFT:
+                          raise RuntimeError(f"[{label}] 버튼은 눌렀지만 연장이 확인되지 않습니다.")
+                      print(f"[{label}] 연장 확인 완료")
+                  except Exception:
+                      page.screenshot(path=f"failure-{label}.png", full_page=True)
+                      raise
                   finally:
                       browser.close()
 
-          extend_account(os.environ.get("PA_USER_1"), os.environ.get("PA_PASS_1"))
-          extend_account(os.environ.get("PA_USER_2"), os.environ.get("PA_PASS_2"))
+          errors = []
+          for label, u, pw in [("account1", os.environ.get("PA_USER_1"), os.environ.get("PA_PASS_1")),
+                               ("account2", os.environ.get("PA_USER_2"), os.environ.get("PA_PASS_2"))]:
+              try:
+                  extend_account(label, u, pw)
+              except Exception as e:
+                  print(f"::error::{e}")
+                  errors.append(str(e))
+
+          sys.exit(1 if errors else 0)
           EOF
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: failure-*.png
+          retention-days: 7
